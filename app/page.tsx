@@ -192,9 +192,3 @@ export default function ThriftTracker() {
     </div>
   );
 }
-```
-
-### Steps to Success:
-1. **Redeploy:** Replace `app/page.tsx` with this code.
-2. **Environment Variables:** If your deployment still shows as blank, ensure you have set the `NEXT_TYPESCRIPT_IGNORE=true` environment variable in Vercel settings under "Environment Variables".
-3. **No Cache:** Always choose "Redeploy" and ensure the "Use build cache" box is **un-checked**.
