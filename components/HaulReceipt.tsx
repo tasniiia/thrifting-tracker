@@ -10,6 +10,170 @@ const currency = (n: number) =>
 
 type Range = "30d" | "all";
 
+/* ==================================================================== */
+/*  Canvas drawing helpers — small, self-contained "icon" glyphs and    */
+/*  chart primitives. Canvas can't render React icon components, so     */
+/*  these are hand-drawn vector shapes that echo the app's Droplet /    */
+/*  Cloud / Leaf iconography.                                            */
+/* ==================================================================== */
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawDroplet(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r);
+  ctx.bezierCurveTo(cx + r * 0.95, cy - r * 0.1, cx + r * 0.8, cy + r * 0.95, cx, cy + r * 0.95);
+  ctx.bezierCurveTo(cx - r * 0.8, cy + r * 0.95, cx - r * 0.95, cy - r * 0.1, cx, cy - r);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawCloud(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx - r * 0.55, cy + r * 0.1, r * 0.5, 0, Math.PI * 2);
+  ctx.arc(cx, cy - r * 0.25, r * 0.62, 0, Math.PI * 2);
+  ctx.arc(cx + r * 0.55, cy + r * 0.1, r * 0.46, 0, Math.PI * 2);
+  ctx.fill();
+  roundRect(ctx, cx - r * 0.95, cy, r * 1.9, r * 0.55, r * 0.25);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawLeaf(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(-Math.PI / 4);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, -r);
+  ctx.quadraticCurveTo(r, -r * 0.6, r, 0);
+  ctx.quadraticCurveTo(r, r * 0.6, 0, r);
+  ctx.quadraticCurveTo(-r, r * 0.6, -r, 0);
+  ctx.quadraticCurveTo(-r, -r * 0.6, 0, -r);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.5)";
+  ctx.lineWidth = Math.max(2, r * 0.08);
+  ctx.beginPath();
+  ctx.moveTo(0, -r * 0.75);
+  ctx.lineTo(0, r * 0.75);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/** A ring/donut chart used to visualize percent-off-retail. */
+function drawDonut(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  r: number,
+  thickness: number,
+  percent: number,
+  color: string,
+  trackColor: string
+) {
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineWidth = thickness;
+  ctx.strokeStyle = trackColor;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  const clamped = Math.max(0, Math.min(100, percent));
+  const start = -Math.PI / 2;
+  const end = start + Math.PI * 2 * (clamped / 100);
+  ctx.strokeStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, start, end);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = color;
+  ctx.font = "700 44px monospace";
+  ctx.fillText(`${Math.round(clamped)}%`, cx, cy + 15);
+  ctx.font = "400 18px monospace";
+  ctx.fillStyle = "#6B6656";
+  ctx.fillText("OFF RETAIL", cx, cy + 42);
+}
+
+/** Two overlaid horizontal bars comparing what was paid vs. full retail value. */
+function drawPaidVsRetailBars(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  maxWidth: number,
+  paid: number,
+  retail: number
+) {
+  const barHeight = 34;
+  const gap = 16;
+  const max = Math.max(paid, retail, 1);
+
+  // retail bar (full width reference, light track)
+  roundRect(ctx, x, y, maxWidth, barHeight, barHeight / 2);
+  ctx.fillStyle = "#EEEBE1";
+  ctx.fill();
+  ctx.textAlign = "right";
+  ctx.font = "700 22px monospace";
+  ctx.fillStyle = "#6B6656";
+  ctx.fillText(currency(retail), x + maxWidth - 16, y + barHeight - 9);
+
+  // paid bar, scaled relative to retail
+  const paidWidth = Math.max(28, (paid / max) * maxWidth);
+  roundRect(ctx, x, y, paidWidth, barHeight, barHeight / 2);
+  ctx.fillStyle = "#B5714B";
+  ctx.fill();
+  ctx.textAlign = "left";
+  ctx.font = "700 22px monospace";
+  ctx.fillStyle = "#FBF9F3";
+  const paidLabel = currency(paid);
+  const labelFits = ctx.measureText(paidLabel).width < paidWidth - 24;
+  if (labelFits) {
+    ctx.fillText(paidLabel, x + 16, y + barHeight - 9);
+  } else {
+    ctx.fillStyle = "#B5714B";
+    ctx.textAlign = "left";
+    ctx.fillText(paidLabel, x + paidWidth + 12, y + barHeight - 9);
+  }
+
+  ctx.textAlign = "left";
+  ctx.font = "400 18px monospace";
+  ctx.fillStyle = "#6B6656";
+  ctx.fillText("YOU PAID", x, y - 14);
+  ctx.textAlign = "right";
+  ctx.fillText("FULL RETAIL", x + maxWidth, y - 14);
+
+  return y + barHeight + gap;
+}
+
+/** Small deterministic PRNG so the barcode looks random but is stable per render. */
+function mulberry32(seed: number) {
+  let a = seed;
+  return function () {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/* ==================================================================== */
+/*  Trigger + modal                                                      */
+/* ==================================================================== */
 export function HaulReceiptTrigger() {
   const { items } = useThrift();
   const [open, setOpen] = useState(false);
@@ -41,12 +205,18 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
   }, [items, range]);
 
   const totals = useMemo(() => {
+    const totalPaid = haulItems.reduce((s, i) => s + i.pricePaid, 0);
+    const totalRetail = haulItems.reduce((s, i) => s + i.retailPrice, 0);
     const totalSaved = haulItems.reduce((s, i) => s + savingsFor(i), 0);
+    const percentOff = totalRetail > 0 ? (totalSaved / totalRetail) * 100 : 0;
     const waterGal = haulItems.reduce((s, i) => s + IMPACT_FACTORS[i.category].waterGal, 0);
     const co2Lbs = haulItems.reduce((s, i) => s + IMPACT_FACTORS[i.category].co2Lbs, 0);
     const wasteLbs = haulItems.reduce((s, i) => s + IMPACT_FACTORS[i.category].wasteLbs, 0);
     return {
+      totalPaid,
+      totalRetail,
       totalSaved,
+      percentOff,
       bathtubs: waterGal / GALLONS_PER_BATHTUB,
       milesDriven: co2Lbs / LBS_CO2_PER_MILE,
       wasteLbs,
@@ -81,7 +251,7 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // outer backdrop (sage) so the torn paper reads clearly
+    // outer backdrop (sage) so the torn paper edge reads clearly
     ctx.fillStyle = "#3F4A38";
     ctx.fillRect(0, 0, W, H);
 
@@ -122,25 +292,32 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // line items
+    // line items, each with a small category-colored dot
     ctx.textAlign = "left";
     y += 60;
-    const maxLines = 8;
+    const maxLines = 6;
     haulItems.slice(0, maxLines).forEach((item) => {
+      const dotColor = IMPACT_FACTORS[item.category].color;
+      ctx.beginPath();
+      ctx.arc(78, y - 9, 7, 0, Math.PI * 2);
+      ctx.fillStyle = dotColor;
+      ctx.fill();
+
       ctx.font = "400 30px monospace";
       ctx.fillStyle = "#2B2A22";
-      const name = item.name.length > 26 ? item.name.slice(0, 25) + "…" : item.name;
-      ctx.fillText(name.toUpperCase(), 70, y);
+      const name = item.name.length > 24 ? item.name.slice(0, 23) + "…" : item.name;
+      ctx.fillText(name.toUpperCase(), 98, y);
+
       ctx.textAlign = "right";
       ctx.fillText(currency(item.pricePaid), W - 70, y);
       ctx.textAlign = "left";
-      y += 48;
+      y += 46;
     });
     if (haulItems.length > maxLines) {
       ctx.font = "400 26px monospace";
       ctx.fillStyle = "#6B6656";
-      ctx.fillText(`+ ${haulItems.length - maxLines} more item${haulItems.length - maxLines === 1 ? "" : "s"}`, 70, y);
-      y += 48;
+      ctx.fillText(`+ ${haulItems.length - maxLines} more item${haulItems.length - maxLines === 1 ? "" : "s"}`, 98, y);
+      y += 46;
     }
 
     y += 20;
@@ -152,60 +329,93 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // total saved
-    y += 70;
+    // TOTAL SAVED + percent-off donut chart, side by side
+    y += 90;
     ctx.font = "700 34px monospace";
     ctx.fillStyle = "#2B2A22";
-    ctx.fillText("TOTAL SAVED", 70, y);
-    ctx.textAlign = "right";
-    ctx.fillStyle = "#B5714B";
-    ctx.font = "700 52px monospace";
-    ctx.fillText(currency(totals.totalSaved), W - 70, y);
     ctx.textAlign = "left";
+    ctx.fillText("TOTAL SAVED", 70, y - 20);
+    ctx.font = "700 72px monospace";
+    ctx.fillStyle = "#B5714B";
+    ctx.fillText(currency(totals.totalSaved), 70, y + 55);
 
-    // environmental wins block
-    y += 90;
+    drawDonut(ctx, W - 175, y + 10, 88, 16, totals.percentOff, "#B5714B", "#EEEBE1");
+
+    // paid vs. retail bar chart
+    y += 150;
+    y = drawPaidVsRetailBars(ctx, 70, y, W - 140, totals.totalPaid, totals.totalRetail);
+
+    // environmental wins — icon grid
+    y += 50;
+    const panelH = 400;
+    roundRect(ctx, 70, y, W - 140, panelH, 24);
     ctx.fillStyle = "#EEEBE1";
-    ctx.fillRect(70, y, W - 140, 300);
-    let innerY = y + 60;
-    ctx.font = "700 28px monospace";
-    ctx.fillStyle = "#3F4A38";
-    ctx.fillText("ENVIRONMENTAL WINS", 100, innerY);
+    ctx.fill();
 
-    innerY += 70;
-    const wins: [string, string][] = [
-      [`${totals.bathtubs.toFixed(1)}`, "bathtubs of water saved"],
-      [`${Math.round(totals.milesDriven)}`, "driving miles avoided (CO₂)"],
-      [`${totals.wasteLbs.toFixed(1)} lbs`, "of waste diverted"],
+    ctx.textAlign = "center";
+    ctx.font = "700 26px monospace";
+    ctx.fillStyle = "#3F4A38";
+    ctx.fillText("ENVIRONMENTAL WINS", W / 2, y + 55);
+
+    const colW = (W - 140) / 3;
+    const iconCy = y + 150;
+    const wins: { draw: (cx: number, cy: number, r: number) => void; value: string; label: string; color: string }[] = [
+      {
+        draw: (cx, cy, r) => drawDroplet(ctx, cx, cy, r, "#3E6E7A"),
+        value: totals.bathtubs.toFixed(1),
+        label: "bathtubs of water",
+        color: "#3E6E7A",
+      },
+      {
+        draw: (cx, cy, r) => drawCloud(ctx, cx, cy, r, "#6E7F5C"),
+        value: Math.round(totals.milesDriven).toLocaleString(),
+        label: "miles of driving (CO₂)",
+        color: "#6E7F5C",
+      },
+      {
+        draw: (cx, cy, r) => drawLeaf(ctx, cx, cy, r, "#B5714B"),
+        value: `${totals.wasteLbs.toFixed(1)}`,
+        label: "lbs waste diverted",
+        color: "#B5714B",
+      },
     ];
-    wins.forEach(([value, label]) => {
-      ctx.font = "700 32px monospace";
+
+    wins.forEach((w, i) => {
+      const cx = 70 + colW * i + colW / 2;
+      w.draw(cx, iconCy, 42);
+
+      ctx.textAlign = "center";
+      ctx.font = "700 46px monospace";
       ctx.fillStyle = "#2B2A22";
-      ctx.fillText(value, 100, innerY);
-      ctx.font = "400 26px monospace";
+      ctx.fillText(w.value, cx, iconCy + 90);
+
+      ctx.font = "400 20px monospace";
       ctx.fillStyle = "#6B6656";
-      const vw = ctx.measureText(value).width;
-      ctx.font = "700 32px monospace";
-      const vw2 = ctx.measureText(value).width;
-      ctx.font = "400 26px monospace";
-      ctx.fillText(label, 100 + vw2 + 20, innerY);
-      innerY += 55;
+      // wrap label onto two lines if needed
+      const words = w.label.split(" ");
+      const mid = Math.ceil(words.length / 2);
+      const line1 = words.slice(0, mid).join(" ");
+      const line2 = words.slice(mid).join(" ");
+      ctx.fillText(line1, cx, iconCy + 118);
+      if (line2) ctx.fillText(line2, cx, iconCy + 142);
     });
 
+    y += panelH;
+
     // barcode
-    const barcodeY = y + 340;
+    const barcodeY = y + 70;
     let bx = 70;
     const rand = mulberry32(haulItems.length + 7);
     while (bx < W - 70) {
       const bw = 2 + Math.floor(rand() * 6);
       ctx.fillStyle = "#2B2A22";
-      ctx.fillRect(bx, barcodeY, bw, 70);
+      ctx.fillRect(bx, barcodeY, bw, 60);
       bx += bw + 4 + Math.floor(rand() * 6);
     }
     ctx.textAlign = "center";
     ctx.font = "400 22px monospace";
     ctx.fillStyle = "#6B6656";
-    ctx.fillText("THRIFTED · TRACKED · WORN", W / 2, barcodeY + 110);
+    ctx.fillText("THRIFTED · TRACKED · WORN", W / 2, barcodeY + 100);
 
     setImgUrl(canvas.toDataURL("image/png"));
   }
@@ -234,7 +444,7 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
           <RangeButton active={range === "all"} onClick={() => setRange("all")}>All time</RangeButton>
         </div>
 
-        <div className="rounded-lg overflow-hidden mx-auto" style={{ maxWidth: 230 }}>
+        <div className="rounded-lg overflow-hidden mx-auto max-h-[60vh] overflow-y-auto" style={{ maxWidth: 230 }}>
           <canvas ref={canvasRef} className="w-full h-auto block" />
         </div>
 
@@ -262,16 +472,4 @@ function RangeButton({ active, onClick, children }: { active: boolean; onClick: 
       {children}
     </button>
   );
-}
-
-/** Small deterministic PRNG so the barcode looks random but is stable per render. */
-function mulberry32(seed: number) {
-  let a = seed;
-  return function () {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }
