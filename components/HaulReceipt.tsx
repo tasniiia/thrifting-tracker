@@ -1,0 +1,277 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { X, Download, Receipt } from "lucide-react";
+import { useThrift, savingsFor } from "../lib/ThriftContext";
+import { IMPACT_FACTORS, GALLONS_PER_BATHTUB, LBS_CO2_PER_MILE } from "../lib/constants";
+
+const currency = (n: number) =>
+  n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+
+type Range = "30d" | "all";
+
+export function HaulReceiptTrigger() {
+  const { items } = useThrift();
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        disabled={items.length === 0}
+        className="flex items-center gap-1.5 rounded-full border border-[#A9A290]/50 bg-white px-4 py-2 text-sm font-medium hover:bg-[#333829] hover:text-[#F4F1E8] hover:border-[#333829] transition-colors disabled:opacity-40"
+      >
+        <Receipt size={15} /> Haul Flex
+      </button>
+      {open && <HaulReceiptModal onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+function HaulReceiptModal({ onClose }: { onClose: () => void }) {
+  const { items } = useThrift();
+  const [range, setRange] = useState<Range>("30d");
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [imgUrl, setImgUrl] = useState<string | null>(null);
+
+  const haulItems = useMemo(() => {
+    if (range === "all") return items;
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const recent = items.filter((i) => new Date(i.dateAdded).getTime() >= cutoff);
+    return recent.length > 0 ? recent : items;
+  }, [items, range]);
+
+  const totals = useMemo(() => {
+    const totalSaved = haulItems.reduce((s, i) => s + savingsFor(i), 0);
+    const waterGal = haulItems.reduce((s, i) => s + IMPACT_FACTORS[i.category].waterGal, 0);
+    const co2Lbs = haulItems.reduce((s, i) => s + IMPACT_FACTORS[i.category].co2Lbs, 0);
+    const wasteLbs = haulItems.reduce((s, i) => s + IMPACT_FACTORS[i.category].wasteLbs, 0);
+    return {
+      totalSaved,
+      bathtubs: waterGal / GALLONS_PER_BATHTUB,
+      milesDriven: co2Lbs / LBS_CO2_PER_MILE,
+      wasteLbs,
+    };
+  }, [haulItems]);
+
+  useEffect(() => {
+    draw();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [haulItems]);
+
+  function zigzagPath(ctx: CanvasRenderingContext2D, y: number, w: number, teeth: number, up: boolean) {
+    const step = w / teeth;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    for (let i = 0; i < teeth; i++) {
+      const midX = i * step + step / 2;
+      const nextX = (i + 1) * step;
+      ctx.lineTo(midX, y + (up ? -14 : 14));
+      ctx.lineTo(nextX, y);
+    }
+    ctx.lineTo(w, y);
+  }
+
+  function draw() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const W = 1080;
+    const H = 1920;
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // outer backdrop (sage) so the torn paper reads clearly
+    ctx.fillStyle = "#3F4A38";
+    ctx.fillRect(0, 0, W, H);
+
+    // paper body with torn top/bottom edges
+    const paperTop = 90;
+    const paperBottom = H - 90;
+    ctx.save();
+    ctx.beginPath();
+    zigzagPath(ctx, paperTop, W, 22, false);
+    ctx.lineTo(W, paperBottom);
+    zigzagPath(ctx, paperBottom, W, 22, true);
+    ctx.lineTo(0, paperTop);
+    ctx.closePath();
+    ctx.fillStyle = "#FBF9F3";
+    ctx.shadowColor = "rgba(0,0,0,0.25)";
+    ctx.shadowBlur = 40;
+    ctx.fill();
+    ctx.restore();
+
+    let y = paperTop + 90;
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#2B2A22";
+    ctx.font = "700 44px monospace";
+    ctx.fillText("SECONDHAND LEDGER", W / 2, y);
+
+    y += 40;
+    ctx.font = "400 24px monospace";
+    ctx.fillStyle = "#6B6656";
+    ctx.fillText("haul receipt", W / 2, y);
+
+    y += 50;
+    ctx.strokeStyle = "#D8D2C0";
+    ctx.setLineDash([6, 8]);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(70, y);
+    ctx.lineTo(W - 70, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // line items
+    ctx.textAlign = "left";
+    y += 60;
+    const maxLines = 8;
+    haulItems.slice(0, maxLines).forEach((item) => {
+      ctx.font = "400 30px monospace";
+      ctx.fillStyle = "#2B2A22";
+      const name = item.name.length > 26 ? item.name.slice(0, 25) + "…" : item.name;
+      ctx.fillText(name.toUpperCase(), 70, y);
+      ctx.textAlign = "right";
+      ctx.fillText(currency(item.pricePaid), W - 70, y);
+      ctx.textAlign = "left";
+      y += 48;
+    });
+    if (haulItems.length > maxLines) {
+      ctx.font = "400 26px monospace";
+      ctx.fillStyle = "#6B6656";
+      ctx.fillText(`+ ${haulItems.length - maxLines} more item${haulItems.length - maxLines === 1 ? "" : "s"}`, 70, y);
+      y += 48;
+    }
+
+    y += 20;
+    ctx.strokeStyle = "#D8D2C0";
+    ctx.setLineDash([6, 8]);
+    ctx.beginPath();
+    ctx.moveTo(70, y);
+    ctx.lineTo(W - 70, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // total saved
+    y += 70;
+    ctx.font = "700 34px monospace";
+    ctx.fillStyle = "#2B2A22";
+    ctx.fillText("TOTAL SAVED", 70, y);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#B5714B";
+    ctx.font = "700 52px monospace";
+    ctx.fillText(currency(totals.totalSaved), W - 70, y);
+    ctx.textAlign = "left";
+
+    // environmental wins block
+    y += 90;
+    ctx.fillStyle = "#EEEBE1";
+    ctx.fillRect(70, y, W - 140, 300);
+    let innerY = y + 60;
+    ctx.font = "700 28px monospace";
+    ctx.fillStyle = "#3F4A38";
+    ctx.fillText("ENVIRONMENTAL WINS", 100, innerY);
+
+    innerY += 70;
+    const wins: [string, string][] = [
+      [`${totals.bathtubs.toFixed(1)}`, "bathtubs of water saved"],
+      [`${Math.round(totals.milesDriven)}`, "driving miles avoided (CO₂)"],
+      [`${totals.wasteLbs.toFixed(1)} lbs`, "of waste diverted"],
+    ];
+    wins.forEach(([value, label]) => {
+      ctx.font = "700 32px monospace";
+      ctx.fillStyle = "#2B2A22";
+      ctx.fillText(value, 100, innerY);
+      ctx.font = "400 26px monospace";
+      ctx.fillStyle = "#6B6656";
+      const vw = ctx.measureText(value).width;
+      ctx.font = "700 32px monospace";
+      const vw2 = ctx.measureText(value).width;
+      ctx.font = "400 26px monospace";
+      ctx.fillText(label, 100 + vw2 + 20, innerY);
+      innerY += 55;
+    });
+
+    // barcode
+    const barcodeY = y + 340;
+    let bx = 70;
+    const rand = mulberry32(haulItems.length + 7);
+    while (bx < W - 70) {
+      const bw = 2 + Math.floor(rand() * 6);
+      ctx.fillStyle = "#2B2A22";
+      ctx.fillRect(bx, barcodeY, bw, 70);
+      bx += bw + 4 + Math.floor(rand() * 6);
+    }
+    ctx.textAlign = "center";
+    ctx.font = "400 22px monospace";
+    ctx.fillStyle = "#6B6656";
+    ctx.fillText("THRIFTED · TRACKED · WORN", W / 2, barcodeY + 110);
+
+    setImgUrl(canvas.toDataURL("image/png"));
+  }
+
+  function handleDownload() {
+    if (!imgUrl) return;
+    const a = document.createElement("a");
+    a.href = imgUrl;
+    a.download = "haul-flex-receipt.png";
+    a.click();
+  }
+
+  return (
+    <div className="fixed inset-0 bg-[#2B2A22]/55 backdrop-blur-[2px] flex items-end sm:items-center justify-center z-50">
+      <div className="bg-[#F4F1E8] w-full sm:max-w-sm sm:rounded-lg rounded-t-2xl p-5 relative">
+        <button onClick={onClose} aria-label="Close" className="absolute top-4 right-4 text-[#3F3B30]/40 hover:text-[#3F3B30]">
+          <X size={18} />
+        </button>
+        <h2 className="text-lg font-semibold mb-1" style={{ fontFamily: "var(--font-display)" }}>
+          Haul Flex
+        </h2>
+        <p className="text-[12px] text-[#3F3B30]/55 mb-4">Your haul, formatted like a receipt — ready to post.</p>
+
+        <div className="flex gap-2 mb-4">
+          <RangeButton active={range === "30d"} onClick={() => setRange("30d")}>Last 30 days</RangeButton>
+          <RangeButton active={range === "all"} onClick={() => setRange("all")}>All time</RangeButton>
+        </div>
+
+        <div className="rounded-lg overflow-hidden mx-auto" style={{ maxWidth: 230 }}>
+          <canvas ref={canvasRef} className="w-full h-auto block" />
+        </div>
+
+        <button
+          onClick={handleDownload}
+          disabled={!imgUrl}
+          className="mt-5 w-full flex items-center justify-center gap-2 rounded-full bg-[#333829] text-[#F4F1E8] py-3 text-sm font-medium hover:bg-[#333829]/85 transition-colors disabled:opacity-40"
+        >
+          <Download size={15} /> Download for Instagram Story
+        </button>
+        <p className="text-[11px] text-[#3F3B30]/45 text-center mt-2.5">1080 × 1920 · sized for stories</p>
+      </div>
+    </div>
+  );
+}
+
+function RangeButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`text-[12px] px-3 py-1.5 rounded-full border transition-colors ${
+        active ? "bg-[#333829] text-[#F4F1E8] border-[#333829]" : "bg-white text-[#3F3B30]/70 border-[#A9A290]/40"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Small deterministic PRNG so the barcode looks random but is stable per render. */
+function mulberry32(seed: number) {
+  let a = seed;
+  return function () {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
