@@ -371,6 +371,53 @@ that looks like it works, here's what changed, what didn't, and why.
   It now defines its own copy, so it's correct regardless of what else is
   mounted.
 
+## Feedback round: real logo, photo picker, wear undo, and hyper-relatable metrics
+
+- **Real logo.** The uploaded shopping-bag-and-hanger logo now replaces the
+  lucide icon combo everywhere: the header (`public/logo-96.png`) and both
+  PWA icons (`public/icon-192.png`, `public/icon-512.png`, regenerated
+  from the source file at the correct sizes).
+- **Camera vs. library, explicitly.** Tapping the photo button in "Log an
+  item" now opens a small picker ("Take photo" / "Choose from library")
+  instead of silently guessing — two separate file inputs behind it, one
+  with `capture="environment"` for the camera, one without for the
+  library.
+- **Wear count can be corrected.** Both the Gallery card and the dense
+  Table view now show a real +/− stepper instead of an increment-only
+  button, backed by a new `removeWear` action in `ThriftContext.tsx`
+  (floored at 0). An accidental tap no longer lives in the count forever.
+- **BOLO is explained, not renamed.** A small info icon next to "BOLO
+  wishlist" explains the acronym (Be On the Look Out) using the same
+  tooltip pattern as the "Thrift I/O" name explainer, so the personality
+  stays intact without leaving anyone confused.
+- **Haul Flex shows the full brand and item name.** Previously anything
+  over 28 characters got truncated with "…". Now brand sits on its own
+  small line above the item name, and the name wraps properly (a new
+  `wrapText` canvas helper) instead of cutting off. Trade-off worth
+  knowing: the receipt now shows a max of 4 items instead of 6, since full
+  untruncated text — sometimes wrapping to 2 lines — takes meaningfully
+  more vertical space than a flat truncated line did, and the canvas has
+  to stay a fixed 1080×1920 to remain a valid Instagram Story image.
+  Anything beyond 4 still shows as "+N more," same as before.
+- **Metrics have a "Relatable" mode.** A small "Numbers / Relatable"
+  toggle on the environmental card swaps the detail line under each stat:
+  - **Water** → "≈ 900 days of drinking water for one person," using a
+    3 liters/day direct-drinking-water baseline (this exact example —
+    2,700 liters, 900 days — is what the constant is calibrated against).
+  - **CO2** → anchored to real Portland-area round-trip driving distances
+    (Portland↔Salem ~94mi, Portland↔Eugene ~222mi, Portland↔Bend ~320mi,
+    from averaged public driving-distance data), picked by closest
+    order-of-magnitude match and expressed as either a percentage of one
+    round trip or a multiple of it — e.g. "You've offset enough CO₂ to
+    drive from Portland to Eugene and back." This is deliberately anchored
+    to Portland specifically because that's the Sourcing Guide's existing
+    coverage area, so the two features read as part of the same world
+    rather than disconnected facts.
+  Both live in `lib/constants.ts` (`drinkingWaterDays`, `relatableDriving`,
+  `LANDMARK_ROUND_TRIPS`) as pure functions — no live API, no added cost,
+  same category as the environmental-methodology work from a few rounds
+  back.
+
 ## Design & implementation notes
 
 - **Palette**: cream (`#F4F1E8`) background, sage/olive ink (`#2B2A22`,

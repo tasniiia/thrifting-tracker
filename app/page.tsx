@@ -1,7 +1,7 @@
 "use client";
 
 import { Fraunces, DM_Sans, Space_Mono } from "next/font/google";
-import { ShoppingBag, Leaf, AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
 import { ThriftProvider, useThrift } from "../lib/ThriftContext";
 import { ToastProvider } from "../lib/Toast";
 import { ErrorBoundary } from "../components/ErrorBoundary";
@@ -56,10 +56,8 @@ function Dashboard() {
         {/* header */}
         <header className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2.5">
-            <div className="relative">
-              <ShoppingBag size={22} strokeWidth={2.25} className="text-[#B5714B]" />
-              <Leaf size={11} className="absolute -right-1.5 -bottom-1.5 text-[#4F5B3E] bg-[#F4F1E8] rounded-full p-[1px]" />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-96.png" alt="Thrift I/O" className="w-9 h-9 rounded-full shrink-0" />
             <div>
               <span className="text-lg tracking-tight flex items-center gap-1.5 leading-none" style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>
                 Thrift <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700 }}>I/O</span>

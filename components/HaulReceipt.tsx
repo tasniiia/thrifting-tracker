@@ -27,6 +27,27 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
+/** Wraps text to fit maxWidth, breaking on word boundaries. Assumes
+ *  ctx.font is already set to the font this text will be drawn in. Used so
+ *  a long item name or brand is never truncated with "…" — it just takes
+ *  another line instead. */
+function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = text.split(" ");
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    const test = current ? `${current} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = test;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
 function drawDroplet(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
   ctx.save();
   ctx.fillStyle = color;
@@ -291,24 +312,46 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
     // line items, each with a small category-colored dot
     ctx.textAlign = "left";
     y += 60;
-    const maxLines = 6;
+    // Capped at 4 (down from a flat 6) specifically to make room for full,
+    // untruncated brand + item name text with proper wrapping — a name
+    // that wraps to 2 lines takes roughly double the vertical space a
+    // single truncated line used to, so fewer items fit per receipt.
+    const maxLines = 4;
+    const priceColumnWidth = 130;
+    const nameMaxWidth = W - 98 - 70 - priceColumnWidth;
+
     haulItems.slice(0, maxLines).forEach((item) => {
       const dotColor = CATEGORY_COLORS[item.category];
-      ctx.beginPath();
-      ctx.arc(78, y - 9, 7, 0, Math.PI * 2);
-      ctx.fillStyle = dotColor;
-      ctx.fill();
+      const itemStartY = y;
 
-      ctx.font = "400 30px monospace";
+      if (item.brand) {
+        ctx.font = "400 19px monospace";
+        ctx.fillStyle = "#6B6656";
+        ctx.fillText(item.brand.toUpperCase(), 98, y);
+        y += 24;
+      }
+
+      ctx.font = "400 28px monospace";
       ctx.fillStyle = "#2B2A22";
-      const label = item.brand ? `${item.brand} ${item.name}` : item.name;
-      const name = label.length > 28 ? label.slice(0, 27) + "…" : label;
-      ctx.fillText(name.toUpperCase(), 98, y);
+      const nameLines = wrapText(ctx, item.name.toUpperCase(), nameMaxWidth);
 
+      // price aligns with the name's first line — the item's main row
       ctx.textAlign = "right";
       ctx.fillText(currency(item.pricePaid), W - 70, y);
       ctx.textAlign = "left";
-      y += 46;
+
+      nameLines.forEach((line, i) => {
+        ctx.fillText(line, 98, y + i * 34);
+      });
+
+      // category dot aligned with the top of this item's block (brand line
+      // if present, otherwise the name's first line)
+      ctx.beginPath();
+      ctx.arc(78, itemStartY - 9, 7, 0, Math.PI * 2);
+      ctx.fillStyle = dotColor;
+      ctx.fill();
+
+      y += (nameLines.length - 1) * 34 + 44;
     });
     if (haulItems.length > maxLines) {
       ctx.font = "400 26px monospace";

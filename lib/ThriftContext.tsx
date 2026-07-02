@@ -97,6 +97,7 @@ interface ThriftContextValue {
   updateItem: (id: string, patch: Partial<NewThriftItem>) => void;
   deleteItem: (id: string) => void;
   addWear: (id: string) => void;
+  removeWear: (id: string) => void;
   donateItem: (id: string) => void;
   restoreItem: (id: string) => void;
   addBolo: (item: NewBoloItem) => void;
@@ -152,6 +153,11 @@ export function ThriftProvider({ children }: { children: React.ReactNode }) {
 
   const addWear = useCallback((id: string) => {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, wearCount: it.wearCount + 1 } : it)));
+  }, []);
+
+  /** Corrects an accidental tap on "add a wear" — floored at 0, never negative. */
+  const removeWear = useCallback((id: string) => {
+    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, wearCount: Math.max(0, it.wearCount - 1) } : it)));
   }, []);
 
   /** Marks an item "donated" (Feature 6) — it leaves the active Ledger/Gallery
@@ -235,6 +241,7 @@ export function ThriftProvider({ children }: { children: React.ReactNode }) {
     updateItem,
     deleteItem,
     addWear,
+    removeWear,
     donateItem,
     restoreItem,
     addBolo,

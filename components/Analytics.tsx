@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Droplet, Leaf, Cloud, Sprout, TreeDeciduous, Trees, Gift } from "lucide-react";
 import { useThrift } from "../lib/ThriftContext";
-import { METHODOLOGY } from "../lib/constants";
+import { METHODOLOGY, drinkingWaterDays, relatableDriving } from "../lib/constants";
 import { InfoTooltip } from "./InfoTooltip";
 
 const currency = (n: number) =>
@@ -10,8 +11,16 @@ const currency = (n: number) =>
 
 const TIER_ICONS = { sprout: Sprout, sapling: TreeDeciduous, forest: Trees } as const;
 
+/** Formats a day count as "X days" under a year, or "X.X years" beyond. */
+function formatDrinkingWater(days: number): string {
+  if (days < 365) return `≈ ${Math.round(days).toLocaleString()} days of drinking water for one person`;
+  const years = days / 365;
+  return `≈ ${years.toFixed(1)} years of drinking water for one person`;
+}
+
 export function Analytics() {
   const { stats } = useThrift();
+  const [relatable, setRelatable] = useState(false);
 
   return (
     <section className="flex flex-col gap-4">
@@ -44,15 +53,38 @@ export function Analytics() {
 
         {/* environmental */}
         <div className="bg-white border border-[#A9A290]/30 rounded-lg p-6 shadow-sm">
-          <h2 className="text-[11px] uppercase tracking-[0.2em] text-[#3F3B30]/45" style={{ fontFamily: "var(--font-mono)" }}>
-            environmental transparency
-          </h2>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h2 className="text-[11px] uppercase tracking-[0.2em] text-[#3F3B30]/45" style={{ fontFamily: "var(--font-mono)" }}>
+              environmental transparency
+            </h2>
+            {stats.count > 0 && (
+              <div className="flex bg-[#EDE8DC] rounded-full p-0.5 text-[11px]">
+                <button
+                  onClick={() => setRelatable(false)}
+                  className={`px-2.5 py-1 rounded-full font-medium transition-colors ${
+                    !relatable ? "bg-white text-[#3F3B30] shadow-sm" : "text-[#3F3B30]/50"
+                  }`}
+                >
+                  Numbers
+                </button>
+                <button
+                  onClick={() => setRelatable(true)}
+                  className={`px-2.5 py-1 rounded-full font-medium transition-colors ${
+                    relatable ? "bg-white text-[#3F3B30] shadow-sm" : "text-[#3F3B30]/50"
+                  }`}
+                >
+                  Relatable
+                </button>
+              </div>
+            )}
+          </div>
           <div className="mt-4 flex flex-col gap-4">
             <ImpactRow
               icon={<Droplet size={18} />}
               color="#3E6E7A"
               value={stats.bathtubs.toFixed(1)}
               unit="bathtubs of water"
+              detail={relatable ? formatDrinkingWater(drinkingWaterDays(stats.bathtubs)) : undefined}
               methodologyKey="water"
             />
             <ImpactRow
@@ -60,7 +92,11 @@ export function Analytics() {
               color="#6E7F5C"
               value={Math.round(stats.co2Lbs).toLocaleString()}
               unit="lbs of CO₂ avoided"
-              detail={`≈ ${Math.round(stats.milesDriven).toLocaleString()} miles of driving`}
+              detail={
+                relatable
+                  ? relatableDriving(stats.milesDriven)
+                  : `≈ ${Math.round(stats.milesDriven).toLocaleString()} miles of driving`
+              }
               methodologyKey="co2"
             />
             <ImpactRow
@@ -71,6 +107,12 @@ export function Analytics() {
               methodologyKey="waste"
             />
           </div>
+          {relatable && (
+            <p className="text-[10.5px] text-[#3F3B30]/35 mt-3 pt-3 border-t border-dashed border-[#A9A290]/30">
+              Driving comparisons anchored to Portland, matching the Sourcing Guide's coverage area. Drinking water
+              assumes ~3 liters/person/day.
+            </p>
+          )}
         </div>
       </div>
 

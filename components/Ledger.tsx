@@ -5,7 +5,6 @@ import {
   Plus,
   Trash2,
   Pencil,
-  Repeat,
   ImageOff,
   ArrowUpDown,
   Clipboard,
@@ -15,6 +14,7 @@ import {
   Shirt,
   RefreshCw,
   ChevronDown,
+  Minus,
 } from "lucide-react";
 import { useThrift, savingsFor, cpwFor, impactScoreFor } from "../lib/ThriftContext";
 import { CATEGORY_COLORS } from "../lib/constants";
@@ -68,7 +68,7 @@ function sortItems(items: ThriftItem[], key: SortKey): ThriftItem[] {
 }
 
 export function Ledger() {
-  const { items, addItem, updateItem, deleteItem, addWear, donateItem, restoreItem } = useThrift();
+  const { items, addItem, updateItem, deleteItem, addWear, removeWear, donateItem, restoreItem } = useThrift();
   const { showToast } = useToast();
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<ThriftItem | null>(null);
@@ -206,6 +206,7 @@ export function Ledger() {
               key={item.id}
               item={item}
               onWear={() => addWear(item.id)}
+              onRemoveWear={() => removeWear(item.id)}
               onEdit={() => setEditing(item)}
               onDelete={() => deleteItem(item.id)}
               onDonate={() => setConfirmingDonate(item)}
@@ -217,6 +218,7 @@ export function Ledger() {
         <TableView
           items={sorted}
           onWear={(id) => addWear(id)}
+          onRemoveWear={(id) => removeWear(id)}
           onEdit={setEditing}
           onDelete={deleteItem}
           onDonate={(item) => setConfirmingDonate(item)}
@@ -298,6 +300,7 @@ export function Ledger() {
 function GalleryCard({
   item,
   onWear,
+  onRemoveWear,
   onEdit,
   onDelete,
   onDonate,
@@ -305,6 +308,7 @@ function GalleryCard({
 }: {
   item: ThriftItem;
   onWear: () => void;
+  onRemoveWear: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onDonate: () => void;
@@ -353,14 +357,38 @@ function GalleryCard({
           <p className="text-[11px] text-white/85" style={{ fontFamily: "var(--font-mono)" }}>
             {currency(item.pricePaid)} <span className="text-white/50">saved {currency(saved)}</span>
           </p>
-          <button
-            onClick={onWear}
-            aria-label="Add a wear"
-            className="flex items-center gap-1 min-h-[32px] text-[10px] text-white/90 bg-white/15 rounded-full px-3 hover:bg-white/25"
-          >
-            <Repeat size={10} /> {item.wearCount}
-            {cpw !== null && <span className="hidden sm:inline">· {currency(cpw)}/wear</span>}
-          </button>
+          <div className="flex items-center gap-1">
+            {cpw !== null && (
+              <span className="hidden sm:inline text-[10px] text-white/55" style={{ fontFamily: "var(--font-mono)" }}>
+                {currency(cpw)}/wear
+              </span>
+            )}
+            <div className="flex items-center bg-white/15 rounded-full overflow-hidden">
+              <button
+                onClick={onRemoveWear}
+                disabled={item.wearCount === 0}
+                aria-label="Remove a wear"
+                title="Remove a wear"
+                className="w-7 h-7 flex items-center justify-center text-white/90 hover:bg-white/20 disabled:opacity-30 transition-colors"
+              >
+                <Minus size={10} />
+              </button>
+              <span
+                className="text-[10px] text-white px-0.5 min-w-[14px] text-center shrink-0"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
+                {item.wearCount}
+              </span>
+              <button
+                onClick={onWear}
+                aria-label="Add a wear"
+                title="Add a wear"
+                className="w-7 h-7 flex items-center justify-center text-white/90 hover:bg-white/20 transition-colors"
+              >
+                <Plus size={10} />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -375,6 +403,7 @@ function GalleryCard({
 function TableView({
   items,
   onWear,
+  onRemoveWear,
   onEdit,
   onDelete,
   onDonate,
@@ -382,6 +411,7 @@ function TableView({
 }: {
   items: ThriftItem[];
   onWear: (id: string) => void;
+  onRemoveWear: (id: string) => void;
   onEdit: (item: ThriftItem) => void;
   onDelete: (id: string) => void;
   onDonate: (item: ThriftItem) => void;
@@ -458,7 +488,7 @@ function TableView({
                   {currency(saved)}
                 </td>
                 <td className="py-2 sm:py-3 px-1 sm:px-2">
-                  <WearBadge count={item.wearCount} onWear={() => onWear(item.id)} />
+                  <WearBadge count={item.wearCount} onWear={() => onWear(item.id)} onRemoveWear={() => onRemoveWear(item.id)} />
                 </td>
                 <td className="py-2 sm:py-3 pl-1 sm:pl-2 pr-2 sm:pr-4 text-right">
                   <ActionMenu
@@ -480,25 +510,46 @@ function TableView({
 }
 
 /**
- * A bold, high-contrast circular count badge for wear-tracking — reads at a
- * glance in the cramped mobile table where a plain "+1 (N)" text button
- * gets lost.
+ * A compact stepper for wear-tracking — increments or decrements a wear
+ * count, so a mis-tap on "add a wear" (Feature request: undo an accidental
+ * click) can be corrected immediately instead of living in the count
+ * forever. High-contrast badge in the middle reads at a glance even in the
+ * cramped mobile table.
  */
-function WearBadge({ count, onWear }: { count: number; onWear: () => void }) {
+function WearBadge({
+  count,
+  onWear,
+  onRemoveWear,
+}: {
+  count: number;
+  onWear: () => void;
+  onRemoveWear: () => void;
+}) {
   return (
-    <button
-      onClick={onWear}
-      aria-label={`Add a wear — worn ${count} time${count === 1 ? "" : "s"} so far`}
-      title="Add a wear"
-      className="flex items-center gap-1 sm:gap-1.5 mx-auto rounded-full border border-[#4F5B3E]/30 hover:bg-[#4F5B3E]/10 pl-0.5 pr-1.5 sm:pr-2 py-0.5 transition-colors"
-    >
+    <div className="flex items-center mx-auto w-fit rounded-full border border-[#4F5B3E]/30 overflow-hidden">
+      <button
+        onClick={onRemoveWear}
+        disabled={count === 0}
+        aria-label="Remove a wear"
+        title="Remove a wear"
+        className="w-6 h-6 flex items-center justify-center text-[#4F5B3E] hover:bg-[#4F5B3E]/10 disabled:opacity-25 disabled:hover:bg-transparent transition-colors"
+      >
+        <Minus size={10} />
+      </button>
       <span
-        className="flex items-center justify-center w-6 h-6 sm:w-6 sm:h-6 rounded-full bg-[#4F5B3E] text-white text-[11px] font-bold shrink-0"
+        className="flex items-center justify-center w-6 h-6 bg-[#4F5B3E] text-white text-[11px] font-bold shrink-0"
         style={{ fontFamily: "var(--font-mono)" }}
       >
         {count}
       </span>
-      <Repeat size={12} className="text-[#4F5B3E] shrink-0" />
-    </button>
+      <button
+        onClick={onWear}
+        aria-label="Add a wear"
+        title="Add a wear"
+        className="w-6 h-6 flex items-center justify-center text-[#4F5B3E] hover:bg-[#4F5B3E]/10 transition-colors"
+      >
+        <Plus size={10} />
+      </button>
+    </div>
   );
 }

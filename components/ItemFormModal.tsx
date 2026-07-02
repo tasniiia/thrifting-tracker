@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { X, Camera, Loader2, ShoppingBag, Gift, ChevronDown } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { X, Camera, Image as ImageIcon, Loader2, ShoppingBag, Gift, ChevronDown } from "lucide-react";
 import { CATEGORIES, MATERIALS } from "../lib/constants";
 import { compressImage } from "../lib/image";
 import { ItemStatus, Material, NewThriftItem, ThriftItem } from "../lib/types";
@@ -34,7 +34,19 @@ export function ItemFormModal({ onClose, onSubmit, initial, prefill }: Props) {
   // entry starts collapsed to the three fields you actually need in the
   // first five seconds of standing in a store aisle.
   const [showDetails, setShowDetails] = useState(isEdit);
+  const [showPhotoPicker, setShowPhotoPicker] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const cameraInput = useRef<HTMLInputElement>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showPhotoPicker) return;
+    function onClick(e: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setShowPhotoPicker(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [showPhotoPicker]);
 
   const isDonation = entryType === "donated";
   // Donations don't have a "price paid" — you're giving the item away, not
@@ -117,50 +129,85 @@ export function ItemFormModal({ onClose, onSubmit, initial, prefill }: Props) {
           </p>
         )}
 
-        {/* photo — capture="environment" opens the rear camera directly on
-           supported mobile browsers instead of a generic file picker */}
+        {/* photo — asks whether to open the camera or the photo library,
+           rather than guessing via the capture attribute alone */}
         <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => fileInput.current?.click()}
-            className="w-20 h-20 rounded-lg border border-dashed border-[#A9A290] bg-white flex items-center justify-center overflow-hidden shrink-0"
-          >
-            {photoBusy ? (
-              <Loader2 size={18} className="animate-spin text-[#A9A290]" />
-            ) : photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={photo} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <Camera size={20} className="text-[#A9A290]" />
+          <div className="relative" ref={pickerRef}>
+            <button
+              type="button"
+              onClick={() => (photo ? setShowPhotoPicker((v) => !v) : setShowPhotoPicker(true))}
+              className="w-20 h-20 rounded-lg border border-dashed border-[#A9A290] bg-white flex items-center justify-center overflow-hidden shrink-0"
+            >
+              {photoBusy ? (
+                <Loader2 size={18} className="animate-spin text-[#A9A290]" />
+              ) : photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={photo} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <Camera size={20} className="text-[#A9A290]" />
+              )}
+            </button>
+
+            {showPhotoPicker && (
+              <div className="absolute z-20 top-[88px] left-0 w-48 bg-white rounded-lg shadow-xl border border-[#A9A290]/20 py-1 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => {
+                    cameraInput.current?.click();
+                    setShowPhotoPicker(false);
+                  }}
+                  className="w-full min-h-[44px] flex items-center gap-2.5 px-3.5 text-[13px] text-left hover:bg-[#F4F1E8] transition-colors text-[#3F3B30]"
+                >
+                  <Camera size={15} /> Take photo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    fileInput.current?.click();
+                    setShowPhotoPicker(false);
+                  }}
+                  className="w-full min-h-[44px] flex items-center gap-2.5 px-3.5 text-[13px] text-left hover:bg-[#F4F1E8] transition-colors text-[#3F3B30]"
+                >
+                  <ImageIcon size={15} /> Choose from library
+                </button>
+                {photo && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPhoto(null);
+                      setShowPhotoPicker(false);
+                    }}
+                    className="w-full min-h-[44px] flex items-center gap-2.5 px-3.5 text-[13px] text-left hover:bg-[#A6503B]/10 transition-colors text-[#A6503B]"
+                  >
+                    <X size={15} /> Remove photo
+                  </button>
+                )}
+              </div>
             )}
-          </button>
+          </div>
+
           <div>
             <button
               type="button"
-              onClick={() => fileInput.current?.click()}
+              onClick={() => setShowPhotoPicker(true)}
               className="text-sm font-medium text-[#4F5B3E] hover:text-[#333829] min-h-[44px] flex items-center"
             >
               {photo ? "Replace photo" : "Snap or add a photo"}
             </button>
-            {photo && (
-              <button
-                type="button"
-                onClick={() => setPhoto(null)}
-                className="block text-[12px] text-[#A6503B] -mt-1"
-              >
-                Remove photo
-              </button>
-            )}
             {photoError && <p className="text-[12px] text-[#A6503B] mt-1">{photoError}</p>}
           </div>
+
+          {/* two separate inputs: one forces the rear camera via
+             capture="environment", the other opens the normal photo library */}
           <input
-            ref={fileInput}
+            ref={cameraInput}
             type="file"
             accept="image/*"
             capture="environment"
             onChange={handlePhoto}
             className="hidden"
           />
+          <input ref={fileInput} type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
         </div>
 
         <Field label="Item">

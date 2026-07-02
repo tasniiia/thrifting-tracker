@@ -178,6 +178,70 @@ export function computeImpact(category: Category, material?: Material): ItemImpa
 export const GALLONS_PER_BATHTUB = 80;
 export const LBS_CO2_PER_MILE = 0.89;
 
+/* ==================================================================== */
+/*  "Hyper-relatable" secondary comparisons for the environmental stats.  */
+/*  These are optional, toggled-on alternate phrasings of the same water  */
+/*  and CO2 numbers — not new data, just a more human-scale way to read   */
+/*  them.                                                                 */
+/* ==================================================================== */
+
+/** ~3 liters/day of direct drinking water is a commonly used average for
+ *  one adult (the U.S. National Academies figure for total daily fluid
+ *  intake is higher, ~3.7L, but that includes water from food — this is
+ *  specifically direct drinking water). At this rate, the ~2,700 liters
+ *  commonly cited to make one cotton t-shirt works out to ~900 days,
+ *  which is the reference point this feature is built around. */
+export const DRINKING_WATER_LITERS_PER_DAY = 3;
+const LITERS_PER_GALLON_RELATABLE = 3.78541;
+
+export function drinkingWaterDays(waterGal: number): number {
+  const liters = waterGal * LITERS_PER_GALLON_RELATABLE;
+  return liters / DRINKING_WATER_LITERS_PER_DAY;
+}
+
+/**
+ * Round-trip driving distances from Portland to a few notable Oregon
+ * cities, used to anchor the CO2 stat to something concrete instead of an
+ * abstract mile count. Sourced from averaged public driving-distance data
+ * (Portland→Salem ~47mi, Portland→Eugene ~111mi, Portland→Bend ~160mi one
+ * way; doubled here for the round trip) — matches the Sourcing Guide's
+ * existing Portland/Bethany-area focus, so the two features stay
+ * geographically consistent with each other.
+ */
+export const LANDMARK_ROUND_TRIPS = [
+  { label: "Portland to Salem", roundTripMiles: 94 },
+  { label: "Portland to Eugene", roundTripMiles: 222 },
+  { label: "Portland to Bend", roundTripMiles: 320 },
+];
+
+/**
+ * Picks whichever landmark round trip is the closest order-of-magnitude
+ * match to the given mileage (comparing on a log scale so a very small or
+ * very large total doesn't always just default to the smallest/largest
+ * entry), then expresses the mileage as a fraction of it or a multiple.
+ */
+export function relatableDriving(miles: number): string {
+  if (miles <= 0) return "";
+  let best = LANDMARK_ROUND_TRIPS[0];
+  let bestScore = Infinity;
+  for (const route of LANDMARK_ROUND_TRIPS) {
+    const score = Math.abs(Math.log(miles / route.roundTripMiles));
+    if (score < bestScore) {
+      bestScore = score;
+      best = route;
+    }
+  }
+  const ratio = miles / best.roundTripMiles;
+  if (ratio >= 0.97) {
+    const trips = Math.round(ratio * 10) / 10;
+    return trips <= 1.05
+      ? `You've offset enough CO₂ to drive from ${best.label} and back.`
+      : `You've offset enough CO₂ to drive from ${best.label} and back ${trips}× over.`;
+  }
+  const pct = Math.round(ratio * 100);
+  return `You're ${pct}% of the way to offsetting a round trip from ${best.label} and back.`;
+}
+
 /** Flat weight credited per donated item toward landfill diversion (Feature 6). */
 export const DONATION_WASTE_LBS = 1.5;
 
