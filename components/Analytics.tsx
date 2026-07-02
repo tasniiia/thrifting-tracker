@@ -17,7 +17,7 @@ export function Analytics() {
     <section className="flex flex-col gap-4">
       <div className="grid lg:grid-cols-2 gap-4">
         {/* financial */}
-        <div className="bg-white border border-[#A9A290]/30 rounded-lg p-6">
+        <div className="bg-white border border-[#A9A290]/30 rounded-lg p-6 shadow-sm">
           <h2 className="text-[11px] uppercase tracking-[0.2em] text-[#3F3B30]/45" style={{ fontFamily: "var(--font-mono)" }}>
             financial impact
           </h2>
@@ -25,7 +25,14 @@ export function Analytics() {
             {currency(stats.totalSaved)}
           </p>
           <p className="text-sm text-[#3F3B30]/60 mt-1">
-            saved vs. retail{stats.savingsPercent > 0 && <span className="text-[#4F5B3E] font-medium"> · {stats.savingsPercent}% off</span>}
+            {stats.count === 0 ? (
+              "log your first find to start tracking savings"
+            ) : (
+              <>
+                saved vs. retail
+                {stats.savingsPercent > 0 && <span className="text-[#4F5B3E] font-medium"> · {stats.savingsPercent}% off</span>}
+              </>
+            )}
           </p>
           <div className="mt-5 pt-4 border-t border-dashed border-[#A9A290]/40 grid grid-cols-2 gap-4">
             <Stat label="Spent thrifting" value={currency(stats.totalSpent)} />
@@ -36,7 +43,7 @@ export function Analytics() {
         </div>
 
         {/* environmental */}
-        <div className="bg-white border border-[#A9A290]/30 rounded-lg p-6">
+        <div className="bg-white border border-[#A9A290]/30 rounded-lg p-6 shadow-sm">
           <h2 className="text-[11px] uppercase tracking-[0.2em] text-[#3F3B30]/45" style={{ fontFamily: "var(--font-mono)" }}>
             environmental transparency
           </h2>
@@ -68,7 +75,7 @@ export function Analytics() {
       </div>
 
       {/* carbon footprint visualizer (Feature 5) */}
-      <div className="bg-white border border-[#A9A290]/30 rounded-lg p-6">
+      <div className="bg-white border border-[#A9A290]/30 rounded-lg p-6 shadow-sm">
         <h2 className="text-[11px] uppercase tracking-[0.2em] text-[#3F3B30]/45" style={{ fontFamily: "var(--font-mono)" }}>
           carbon footprint visualizer
         </h2>

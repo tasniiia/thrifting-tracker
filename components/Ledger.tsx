@@ -12,6 +12,7 @@ import {
   Gift,
   LayoutGrid,
   Rows3,
+  Shirt,
 } from "lucide-react";
 import { useThrift, savingsFor, cpwFor, impactScoreFor } from "../lib/ThriftContext";
 import { IMPACT_FACTORS } from "../lib/constants";
@@ -19,6 +20,7 @@ import { ThriftItem } from "../lib/types";
 import { copyListingToClipboard } from "../lib/listing";
 import { useToast } from "../lib/Toast";
 import { ItemFormModal } from "./ItemFormModal";
+import { EmptyState } from "./EmptyState";
 
 const currency = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
@@ -89,7 +91,7 @@ export function Ledger() {
   }
 
   return (
-    <section>
+    <section id="ledger">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-[11px] uppercase tracking-[0.2em] text-[#3F3B30]/45" style={{ fontFamily: "var(--font-mono)" }}>
           the ledger
@@ -167,12 +169,18 @@ export function Ledger() {
       </div>
 
       {activeItems.length === 0 ? (
-        <div className="mt-4 border border-dashed border-[#A9A290]/50 rounded-lg py-14 text-center">
-          <p className="text-[#3F3B30]/60 text-sm">
-            {items.length === 0
-              ? "Nothing logged yet. Add your first find to start the ledger."
-              : "Everything here has been donated. Log a new find to keep going."}
-          </p>
+        <div className="mt-4">
+          <EmptyState
+            icon={<Shirt size={22} />}
+            title={items.length === 0 ? "Your closet is empty" : "Everything here has been donated"}
+            description={
+              items.length === 0
+                ? "Log your first secondhand find to start tracking savings and impact."
+                : "Nicely done — log a new find to keep the ledger going."
+            }
+            actionLabel="Log a find"
+            onAction={() => setShowAdd(true)}
+          />
         </div>
       ) : view === "gallery" ? (
         <div className="mt-5 grid grid-cols-2 lg:grid-cols-3 gap-4">
@@ -239,7 +247,7 @@ function GalleryCard({
   const cpw = cpwFor(item);
 
   return (
-    <div className="group relative rounded-lg overflow-hidden bg-[#EDE8DC] aspect-square">
+    <div className="group relative rounded-lg overflow-hidden bg-[#EDE8DC] aspect-square shadow-sm hover:shadow-md transition-shadow">
       {item.photo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={item.photo} alt={item.name} className="w-full h-full object-cover" />
@@ -338,7 +346,7 @@ function TableView({
   onGenerateListing: (item: ThriftItem) => void;
 }) {
   return (
-    <div className="mt-5 overflow-x-auto rounded-lg border border-[#A9A290]/30 bg-white">
+    <div className="mt-5 overflow-x-auto rounded-lg border border-[#A9A290]/30 bg-white shadow-sm">
       <table className="w-full text-sm min-w-[720px]">
         <thead>
           <tr className="text-left border-b border-[#A9A290]/25 text-[11px] uppercase tracking-wide text-[#3F3B30]/45">

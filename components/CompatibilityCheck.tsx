@@ -10,7 +10,7 @@ import { computeCompatibility, CompatibilityResult } from "../lib/compatibility"
 export function CompatibilityCheck() {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-white border border-[#A9A290]/30 rounded-lg p-6">
+    <div className="bg-white border border-[#A9A290]/30 rounded-lg p-6 shadow-sm">
       <div className="flex items-center gap-1.5">
         <Wand2 size={14} className="text-[#B5714B]" />
         <h2 className="text-[11px] uppercase tracking-[0.2em] text-[#3F3B30]/45" style={{ fontFamily: "var(--font-mono)" }}>

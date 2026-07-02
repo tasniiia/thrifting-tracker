@@ -24,7 +24,7 @@ export function SourcingGuide() {
   const route = selectedStores.length >= 2 ? buildRoute(selectedStores) : [];
 
   return (
-    <section className="bg-white border border-[#A9A290]/30 rounded-lg p-6">
+    <section className="bg-white border border-[#A9A290]/30 rounded-lg p-6 shadow-sm">
       <div className="flex items-center gap-1.5">
         <Sparkles size={14} className="text-[#B5714B]" />
         <h2 className="text-[11px] uppercase tracking-[0.2em] text-[#3F3B30]/45" style={{ fontFamily: "var(--font-mono)" }}>

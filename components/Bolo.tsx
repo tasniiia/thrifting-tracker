@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Pencil, X, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, Pencil, X, CheckCircle2, Binoculars } from "lucide-react";
 import { useThrift } from "../lib/ThriftContext";
 import { CATEGORIES } from "../lib/constants";
 import { BoloItem, NewBoloItem, NewThriftItem } from "../lib/types";
 import { ItemFormModal } from "./ItemFormModal";
+import { EmptyState } from "./EmptyState";
 
 const currency = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -17,7 +18,7 @@ export function Bolo() {
   const [foundItem, setFoundItem] = useState<BoloItem | null>(null);
 
   return (
-    <section className="bg-white border border-[#A9A290]/30 rounded-lg p-6">
+    <section className="bg-white border border-[#A9A290]/30 rounded-lg p-6 shadow-sm">
       <div className="flex items-center justify-between">
         <h2 className="text-[11px] uppercase tracking-[0.2em] text-[#3F3B30]/45" style={{ fontFamily: "var(--font-mono)" }}>
           BOLO wishlist
@@ -31,9 +32,15 @@ export function Bolo() {
       </div>
 
       {bolo.length === 0 ? (
-        <p className="text-sm text-[#3F3B30]/55 mt-3">
-          No white whales yet. Add a target item and price so you know when to walk away.
-        </p>
+        <div className="mt-4">
+          <EmptyState
+            icon={<Binoculars size={20} />}
+            title="No white whales yet"
+            description="Add a target item and price so you know exactly when to walk away."
+            actionLabel="Add a hunt item"
+            onAction={() => setShowForm(true)}
+          />
+        </div>
       ) : (
         <ul className="mt-4 flex flex-col gap-2.5">
           {bolo.map((b) => (
