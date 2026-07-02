@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Pencil, X, CheckCircle2, Binoculars } from "lucide-react";
+import { Plus, Trash2, Pencil, X, CheckCircle2, Search } from "lucide-react";
 import { useThrift } from "../lib/ThriftContext";
 import { CATEGORIES } from "../lib/constants";
 import { BoloItem, NewBoloItem, NewThriftItem } from "../lib/types";
@@ -34,7 +34,7 @@ export function Bolo() {
       {bolo.length === 0 ? (
         <div className="mt-4">
           <EmptyState
-            icon={<Binoculars size={20} />}
+            icon={<Search size={20} />}
             title="No white whales yet"
             description="Add a target item and price so you know exactly when to walk away."
             actionLabel="Add a hunt item"
