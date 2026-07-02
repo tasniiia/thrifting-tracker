@@ -37,11 +37,11 @@ export function Bolo() {
   return (
     <section className="bg-white border border-[#A9A290]/30 rounded-lg p-6 shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-[11px] uppercase tracking-[0.2em] text-[#3F3B30]/45 flex items-center gap-1" style={{ fontFamily: "var(--font-mono)" }}>
+        <h2 className="text-[11px] text-[#3F3B30]/45 flex items-center gap-1" style={{ fontFamily: "var(--font-mono)" }}>
           BOLO wishlist
           <InfoTooltip
             title="What's a BOLO?"
-            body="Be On the Look Out — thrifter slang for a specific item you're actively hunting for. Basically your hunt list."
+            body="Be On the Look Out — thrifter slang for a specific item you're actively hunting for."
             iconSize={12}
           />
         </h2>
