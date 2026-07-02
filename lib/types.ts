@@ -43,11 +43,17 @@ export interface BoloItem {
 export interface Store {
   name: string;
   neighborhood: string;
+  address: string;
+  /** Real Google Maps place link, built from a verified place_id — lets
+   *  someone check the store (hours, current reviews, directions)
+   *  themselves rather than taking the listing on faith. */
+  mapsUrl: string;
   categories: Category[];
   vibe: string;
   priceRange: "$" | "$$" | "$$$";
-  /** Fixed stop order for the mock "Thrift Circuit" route optimizer — an
-   *  illustrative, hardcoded geographic sequence, not a live routing call. */
+  /** Fixed stop order for the mock "Thrift Circuit" route optimizer — a
+   *  hardcoded geographic sweep based on each store's real coordinates,
+   *  not a live routing call. */
   routeOrder: number;
 }
 

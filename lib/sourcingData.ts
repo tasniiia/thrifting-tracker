@@ -1,76 +1,101 @@
 import { Category, Store, ThriftItem } from "./types";
 
 /**
- * Starter directory for the Portland / Bethany area. This is illustrative
- * placeholder data, not a verified business listing — swap these entries
- * for real shops you know, or wire `getRecommendations` up to a live
- * places API / your own backend later. The matching logic below is fully
- * deterministic (no external AI call needed to run this feature).
+ * Real secondhand/thrift/consignment stores across the Portland/Beaverton
+ * area, looked up live and verified (name, address, place ID) rather than
+ * invented. Categories, vibe descriptions, and price tiers are this app's
+ * own characterization based on that lookup (reviews, listed store types),
+ * not something the stores themselves published — treat those specific
+ * judgment calls as informed estimates, not official store positioning.
+ * Everything else (name, address, the Google Maps link) is real and
+ * independently checkable.
+ *
+ * This is still a snapshot, not a live feed — hours, inventory, and even
+ * whether a store is still open can change after this was compiled. Wire
+ * `getRecommendations` up to a live Places API if you want this to
+ * self-update; the matching logic below is otherwise fully deterministic
+ * and doesn't need one to run.
  */
 export const STORE_DIRECTORY: Store[] = [
   {
-    name: "Bethany Vintage Exchange",
+    name: "Second Edition Resale Shop",
     routeOrder: 1,
-    neighborhood: "Bethany",
-    categories: ["Outerwear", "Dresses", "Accessories"],
-    vibe: "Curated racks, higher price point, strong on structured coats and going-out pieces.",
-    priceRange: "$$$",
-  },
-  {
-    name: "Cornell Road Thrift Collective",
-    routeOrder: 2,
-    neighborhood: "Bethany",
+    neighborhood: "Bethany / Cedar Mill",
+    address: "1050 NW Saltzman Rd, Portland, OR 97229",
+    mapsUrl: "https://www.google.com/maps/place/?q=place_id:ChIJLYveOygJlVQR0XnPTgwDV00",
     categories: ["Tops", "Bottoms", "Home Goods"],
-    vibe: "Volunteer-run and unsorted — dig-friendly, best when you have a free afternoon.",
+    vibe: "Attached to the Cedar Mill Library, with proceeds supporting it directly — housewares plus a solid range of adult and kids' clothing, prices skew low.",
     priceRange: "$",
   },
   {
-    name: "NW 23rd Consignment",
-    routeOrder: 6,
-    neighborhood: "Northwest Portland",
-    categories: ["Dresses", "Accessories", "Shoes"],
-    vibe: "Boutique-style consignment, polished window displays, occasional designer finds.",
+    name: "Beaverton ReStore (Habitat for Humanity)",
+    routeOrder: 2,
+    neighborhood: "Beaverton",
+    address: "13475 SW Millikan Way, Beaverton, OR 97005",
+    mapsUrl: "https://www.google.com/maps/place/?q=place_id:ChIJkSVUMZgOlVQR3pmyvVO-md0",
+    categories: ["Home Goods", "Bottoms", "Tops", "Other"],
+    vibe: "Big-box thrift energy for furniture and housewares plus a real clothing section — proceeds fund Habitat for Humanity builds.",
+    priceRange: "$",
+  },
+  {
+    name: "Consign Couture",
+    routeOrder: 3,
+    neighborhood: "Multnomah Village",
+    address: "7871 SW Capitol Hwy, Portland, OR 97219",
+    mapsUrl: "https://www.google.com/maps/place/?q=place_id:ChIJL6u5App0lVQR1xvbL_JxpGg",
+    categories: ["Shoes", "Accessories", "Dresses"],
+    vibe: "Designer-leaning women's consignment — shoes, bags, and jewelry alongside clothing, organized by color and size.",
     priceRange: "$$$",
   },
   {
-    name: "Hawthorne Reclaim",
+    name: "visii",
+    routeOrder: 4,
+    neighborhood: "NW 23rd",
+    address: "724 NW 23rd Ave, Portland, OR 97210",
+    mapsUrl: "https://www.google.com/maps/place/?q=place_id:ChIJs-4-BesJlVQRO8Hg5O-AUzc",
+    categories: ["Dresses", "Accessories", "Shoes"],
+    vibe: "Curated vintage on trendy NW 23rd — well-kept pieces and one-of-a-kind finds, prices run a bit higher for the curation.",
+    priceRange: "$$$",
+  },
+  {
+    name: "House of Vintage",
     routeOrder: 5,
     neighborhood: "SE Hawthorne",
+    address: "3315 SE Hawthorne Blvd, Portland, OR 97214",
+    mapsUrl: "https://www.google.com/maps/place/?q=place_id:ChIJ3y6NlJGglVQRibjLYU90rVA",
     categories: ["Outerwear", "Bottoms", "Accessories"],
-    vibe: "Eclectic and a little punk — great denim and jacket wall, unpredictable sizing.",
+    vibe: "Massive multi-vendor space — eclectic mix, worth taking your time with, prices vary a lot stall to stall.",
     priceRange: "$$",
   },
   {
-    name: "Alberta Arts Trade Shop",
-    routeOrder: 4,
-    neighborhood: "Alberta Arts District",
-    categories: ["Tops", "Accessories", "Home Goods"],
-    vibe: "Artist-run, rotating pop-up racks, small-batch and locally made mixed in.",
-    priceRange: "$$",
-  },
-  {
-    name: "Beaverton Community Thrift",
-    routeOrder: 8,
-    neighborhood: "Beaverton",
+    name: "Village Merchants",
+    routeOrder: 6,
+    neighborhood: "SE Division",
+    address: "4035 SE Division St, Portland, OR 97202",
+    mapsUrl: "https://www.google.com/maps/place/?q=place_id:ChIJH1gsFYaglVQRh9KBKK-UvMI",
     categories: ["Home Goods", "Bottoms", "Tops", "Other"],
-    vibe: "Big-box thrift energy — high volume, low prices, best for frequent short visits.",
+    vibe: "One of the most diverse thrift stores in Portland — clothing, housewares, and garden stuff all mixed together, worth going with time to dig.",
     priceRange: "$",
   },
   {
-    name: "Sellwood Shoe & Leather Co.",
+    name: "Broken Dreams",
     routeOrder: 7,
-    neighborhood: "Sellwood",
-    categories: ["Shoes", "Accessories"],
-    vibe: "Specialty resale for shoes and leather goods, small but reliably well-kept stock.",
+    neighborhood: "Alberta Arts District",
+    address: "1524 NE Alberta St, Portland, OR 97211",
+    mapsUrl: "https://www.google.com/maps/place/?q=place_id:ChIJ6X9ewXOnlVQRujZC6fPQ7gY",
+    categories: ["Tops", "Accessories", "Home Goods"],
+    vibe: "Art-gallery-meets-clothing-rack — rotating local art and records alongside a curated secondhand selection.",
     priceRange: "$$",
   },
   {
-    name: "St. Johns Swap Room",
-    routeOrder: 3,
+    name: "Hound and Hare Vintage",
+    routeOrder: 8,
     neighborhood: "St. Johns",
+    address: "7322 N Leavitt Ave, Portland, OR 97203",
+    mapsUrl: "https://www.google.com/maps/place/?q=place_id:ChIJ7bkkMgColVQRxyCKJqRbKWk",
     categories: ["Outerwear", "Home Goods", "Other"],
-    vibe: "Laid-back neighborhood shop, strong on flannel, workwear, and household goods.",
-    priceRange: "$",
+    vibe: "Tightly curated true vintage — workwear and streetwear alike, owner-run and well known in the neighborhood.",
+    priceRange: "$$",
   },
 ];
 
@@ -108,10 +133,10 @@ export function topCategoriesByFrequency(items: ThriftItem[], limit = 2): Catego
 
 /**
  * Mock route optimizer for the "Thrift Circuit" feature. Sorts the selected
- * stops by each store's fixed `routeOrder` — a hardcoded, illustrative
- * geographic sequence for this starter directory, not a live routing /
- * mapping API call. Swap this for a real routing service if you wire the
- * directory up to live data later.
+ * stops by each store's fixed `routeOrder` — a hardcoded sequence based on
+ * each store's real coordinates swept roughly west-to-east/north, not a
+ * live routing / mapping API call. Swap this for a real routing service
+ * (e.g. the Google Directions API) if you want an actually-optimized route.
  */
 export function buildRoute(selected: Store[]): Store[] {
   return [...selected].sort((a, b) => a.routeOrder - b.routeOrder);

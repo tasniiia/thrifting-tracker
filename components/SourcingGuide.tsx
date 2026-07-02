@@ -62,13 +62,14 @@ export function SourcingGuide() {
 
       {topCategories.length === 0 ? (
         <p className="text-sm text-[#3F3B30]/60 mt-3">
-          Log a few finds and this will start recommending spots near Bethany / Portland that match what you actually buy.
+          Log a few finds and this will start recommending real spots around Portland and Beaverton that match what
+          you actually buy.
         </p>
       ) : (
         <>
           <p className="text-sm text-[#3F3B30]/70 mt-3">
             You shop <span className="font-semibold text-[#333829]">{topCategories.join(" & ")}</span> the most — here's
-            where that tends to show up around Bethany and Portland.
+            where that tends to show up around Portland and Beaverton.
           </p>
 
           {/* Thrift Circuit — only exists while actively planning a route (Feature 4) */}
@@ -89,12 +90,20 @@ export function SourcingGuide() {
                     <p className="text-[13px] font-medium leading-tight">
                       Stop {i + 1}: {store.name}
                     </p>
-                    <p className="text-[11px] text-[#3F3B30]/50">{store.neighborhood}</p>
+                    <a
+                      href={store.mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] text-[#3F3B30]/50 hover:text-[#4F5B3E] hover:underline"
+                    >
+                      {store.address}
+                    </a>
                   </li>
                 ))}
               </ol>
               <p className="text-[10px] text-[#3F3B30]/40 mt-1">
-                Order is a fixed illustrative sequence for this starter directory, not a live routing/mapping call.
+                Stop order is a fixed sequence based on real store locations, not a live routing call — for an
+                actually-optimized route, paste these addresses into Google Maps.
               </p>
             </div>
           )}
@@ -124,11 +133,19 @@ export function SourcingGuide() {
                           className="mt-1 accent-[#4F5B3E] w-3.5 h-3.5"
                         />
                       )}
-                      <div>
+                      <div className="min-w-0">
                         <p className="font-medium text-[14px]">{r.store.name}</p>
-                        <p className="text-[12px] text-[#3F3B30]/50 flex items-center gap-1 mt-0.5">
-                          <MapPin size={11} /> {r.store.neighborhood}
-                        </p>
+                        <a
+                          href={r.store.mapsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[12px] text-[#3F3B30]/50 hover:text-[#4F5B3E] hover:underline flex items-start gap-1 mt-0.5"
+                        >
+                          <MapPin size={11} className="mt-0.5 shrink-0" />
+                          <span>
+                            {r.store.neighborhood} · {r.store.address}
+                          </span>
+                        </a>
                       </div>
                     </div>
                     <span className="text-[12px] text-[#3F3B30]/40" style={{ fontFamily: "var(--font-mono)" }}>
@@ -154,8 +171,8 @@ export function SourcingGuide() {
       )}
 
       <p className="text-[11px] text-[#3F3B30]/40 mt-4">
-        Starter directory — not a live business listing. Swap in shops you actually know, or connect this to a live
-        places API for real-time recommendations.
+        Real stores, addresses, and map links, verified as of when this list was compiled — not a live, self-updating
+        feed, so double-check hours before a special trip. Tap a store's address to open it in Google Maps.
       </p>
     </section>
   );
