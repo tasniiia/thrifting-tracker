@@ -24,6 +24,7 @@ import { useToast } from "../lib/Toast";
 import { ItemFormModal } from "./ItemFormModal";
 import { EmptyState } from "./EmptyState";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { ActionMenu } from "./ActionMenu";
 
 const currency = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
@@ -331,20 +332,17 @@ function GalleryCard({
         </span>
       </div>
 
-      {/* Always tappable on touch devices; a quiet fade-in on hover for desktop */}
-      <div className="absolute top-2 right-2 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-        <IconButton label="Generate listing" onClick={onGenerateListing}>
-          <Clipboard size={12} />
-        </IconButton>
-        <IconButton label="Edit" onClick={onEdit}>
-          <Pencil size={12} />
-        </IconButton>
-        <IconButton label="Mark as donated" onClick={onDonate}>
-          <Gift size={12} />
-        </IconButton>
-        <IconButton label="Delete" onClick={onDelete} danger>
-          <Trash2 size={12} />
-        </IconButton>
+      {/* Single overflow menu instead of 4 separate icon buttons — much
+         less crowded on a narrow 2-column mobile grid, always tappable. */}
+      <div className="absolute top-2 right-2">
+        <ActionMenu
+          items={[
+            { label: "Generate listing", icon: <Clipboard size={14} />, onClick: onGenerateListing },
+            { label: "Edit", icon: <Pencil size={14} />, onClick: onEdit },
+            { label: "Mark as donated", icon: <Gift size={14} />, onClick: onDonate },
+            { label: "Delete", icon: <Trash2 size={14} />, onClick: onDelete, danger: true },
+          ]}
+        />
       </div>
 
       {/* name / brand overlay, gradient bar (Feature 2 spec) */}
@@ -366,31 +364,6 @@ function GalleryCard({
         </div>
       </div>
     </div>
-  );
-}
-
-function IconButton({
-  children,
-  label,
-  onClick,
-  danger,
-}: {
-  children: React.ReactNode;
-  label: string;
-  onClick: () => void;
-  danger?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      aria-label={label}
-      title={label}
-      className={`bg-[#F4F1E8]/95 rounded-full p-1.5 shadow-sm hover:bg-white ${
-        danger ? "text-[#A6503B]" : "text-[#3F3B30]/70"
-      }`}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -487,21 +460,15 @@ function TableView({
                 <td className="py-2 sm:py-3 px-1 sm:px-2">
                   <WearBadge count={item.wearCount} onWear={() => onWear(item.id)} />
                 </td>
-                <td className="py-2 sm:py-3 pl-1 sm:pl-2 pr-2 sm:pr-4">
-                  <div className="flex items-center justify-end gap-0.5 sm:gap-1">
-                    <IconButton label="Generate listing" onClick={() => onGenerateListing(item)}>
-                      <Clipboard size={13} />
-                    </IconButton>
-                    <IconButton label="Edit" onClick={() => onEdit(item)}>
-                      <Pencil size={13} />
-                    </IconButton>
-                    <IconButton label="Mark as donated" onClick={() => onDonate(item)}>
-                      <Gift size={13} />
-                    </IconButton>
-                    <IconButton label="Delete" onClick={() => onDelete(item.id)} danger>
-                      <Trash2 size={13} />
-                    </IconButton>
-                  </div>
+                <td className="py-2 sm:py-3 pl-1 sm:pl-2 pr-2 sm:pr-4 text-right">
+                  <ActionMenu
+                    items={[
+                      { label: "Generate listing", icon: <Clipboard size={14} />, onClick: () => onGenerateListing(item) },
+                      { label: "Edit", icon: <Pencil size={14} />, onClick: () => onEdit(item) },
+                      { label: "Mark as donated", icon: <Gift size={14} />, onClick: () => onDonate(item) },
+                      { label: "Delete", icon: <Trash2 size={14} />, onClick: () => onDelete(item.id), danger: true },
+                    ]}
+                  />
                 </td>
               </tr>
             );

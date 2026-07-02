@@ -71,7 +71,7 @@ function Dashboard() {
                   iconSize={12}
                 />
               </span>
-              <span className="text-[11px] text-[#3F3B30]/45 block mt-1">Your closet, your savings, your footprint</span>
+              <span className="text-[11px] text-[#3F3B30]/45 hidden sm:block mt-1">Your closet, your savings, your footprint</span>
             </div>
           </div>
           <ErrorBoundary label="Haul Flex">

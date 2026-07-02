@@ -33,10 +33,31 @@ export const CATEGORIES = Object.keys(CATEGORY_COLORS) as Category[];
 /*      average (Water Footprint Network; regional figures range from    */
 /*      ~3,800 L/kg in the US to ~22,500 L/kg in India). ~3.6 kg CO2e/kg  */
 /*      (Carbon Trust).                                                  */
+/*    - Denim: derived directly from Levi Strauss & Co.'s own published  */
+/*      cradle-to-grave LCA of a pair of 501 jeans — 3,781 L water and    */
+/*      33.4 kg CO2e per pair — divided by this app's 0.8 kg Bottoms     */
+/*      weight assumption to get a per-kg rate. Note this scope includes */
+/*      consumer-phase impact (washing/drying over the garment's life)   */
+/*      that the other materials here don't include (they're            */
+/*      production-only), so Denim isn't perfectly apples-to-apples with */
+/*      the rest of this table — but it's the most specific, real,       */
+/*      single-product LCA available for anything in this list, and      */
+/*      using it beats not offering a denim-specific option at all.      */
 /*    - Synthetic (polyester/nylon blends): low blue-water process       */
 /*      (~90 L/kg) but real pollution costs show up as grey water from   */
 /*      dyeing, not captured here. 9.52 kg CO2e/kg (Tekin et al., 2024,   */
 /*      as cited in a 2025 IWA Publishing textile LCA study).            */
+/*    - Satin is a weave, not a fiber — real satin garments can be silk, */
+/*      polyester, or acetate/rayon. Published silk LCA figures vary by  */
+/*      two orders of magnitude between sources (from industry-marketed  */
+/*      "carbon negative via mulberry trees" claims to an independent    */
+/*      cradle-to-gate estimate of ~80.9 kg CO2e/kg), too unreliable to   */
+/*      cite with confidence either way. Since polyester is the most     */
+/*      common fiber behind satin-weave garments in affordable and       */
+/*      secondhand fashion, this models Satin as a Synthetic base with a */
+/*      documented ~30-50% increase reflecting the tighter weave and     */
+/*      extra finishing (e.g. calendering) satin needs for its sheen —   */
+/*      a transparent assumption, not a cited figure.                    */
 /*    - Wool: water figure here is processing-only, not the much larger  */
 /*      and more contested land/feed footprint some full-LCA studies     */
 /*      include. 23.63 kg CO2e/kg (Tekin et al., 2024) — consistent with */
@@ -49,8 +70,8 @@ export const CATEGORIES = Object.keys(CATEGORY_COLORS) as Category[];
 /*      CO2e/m² for cow-skin leather — this app deliberately uses the    */
 /*      more conservative processing-only figure rather than the upper   */
 /*      bound.                                                           */
-/*    - Mixed/Other: a simple average of the four material profiles      */
-/*      above, used when no material is specified for an item.           */
+/*    - Mixed/Other: a simple average of the five kg-based material      */
+/*      profiles above, used when no material is specified for an item.  */
 /*                                                                        */
 /*  CATEGORY_MASS_KG — typical finished-garment mass per category, used  */
 /*  to scale the per-kg material factors into a per-item estimate. The   */
@@ -68,7 +89,7 @@ export const CATEGORIES = Object.keys(CATEGORY_COLORS) as Category[];
 /*  Leather, since leather LCA figures are reported per square meter.    */
 /* ==================================================================== */
 
-export const MATERIALS: Material[] = ["Cotton", "Synthetic", "Wool", "Leather", "Mixed/Other"];
+export const MATERIALS: Material[] = ["Cotton", "Denim", "Synthetic", "Satin", "Wool", "Leather", "Mixed/Other"];
 
 interface MaterialFactor {
   waterPerUnit: number; // liters
@@ -78,10 +99,12 @@ interface MaterialFactor {
 
 export const MATERIAL_FACTORS: Record<Material, MaterialFactor> = {
   Cotton: { waterPerUnit: 10000, co2PerUnit: 3.6, unit: "kg" },
+  Denim: { waterPerUnit: 4726, co2PerUnit: 41.75, unit: "kg" },
   Synthetic: { waterPerUnit: 90, co2PerUnit: 9.52, unit: "kg" },
+  Satin: { waterPerUnit: 135, co2PerUnit: 12.4, unit: "kg" },
   Wool: { waterPerUnit: 5000, co2PerUnit: 23.63, unit: "kg" },
   Leather: { waterPerUnit: 2000, co2PerUnit: 17, unit: "m2" },
-  "Mixed/Other": { waterPerUnit: 5030, co2PerUnit: 12.25, unit: "kg" }, // average of the above three kg-based materials
+  "Mixed/Other": { waterPerUnit: 3990, co2PerUnit: 18.18, unit: "kg" }, // average of the five kg-based materials above
 };
 
 export const CATEGORY_MASS_KG: Record<Category, number> = {

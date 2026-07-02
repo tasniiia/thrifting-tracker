@@ -14,7 +14,7 @@ export type ItemStatus = "active" | "donated";
  *  lib/constants.ts (computeImpact). Optional so existing items logged
  *  before this field existed still work — they fall back to a blended
  *  "Mixed/Other" average. */
-export type Material = "Cotton" | "Synthetic" | "Wool" | "Leather" | "Mixed/Other";
+export type Material = "Cotton" | "Denim" | "Synthetic" | "Satin" | "Wool" | "Leather" | "Mixed/Other";
 
 export interface ThriftItem {
   id: string;

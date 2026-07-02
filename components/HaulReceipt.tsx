@@ -51,24 +51,49 @@ function drawCloud(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: num
   ctx.restore();
 }
 
-function drawLeaf(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
+/** Universal recycling symbol — three rotated arrow "blades" — used for the
+ *  waste-diverted stat. A generic leaf reads as "eco" broadly but doesn't
+ *  say "diverted from landfill" the way chasing arrows immediately do. */
+function drawRecycle(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.rotate(-Math.PI / 4);
+  ctx.strokeStyle = color;
   ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(0, -r);
-  ctx.quadraticCurveTo(r, -r * 0.6, r, 0);
-  ctx.quadraticCurveTo(r, r * 0.6, 0, r);
-  ctx.quadraticCurveTo(-r, r * 0.6, -r, 0);
-  ctx.quadraticCurveTo(-r, -r * 0.6, 0, -r);
-  ctx.fill();
-  ctx.strokeStyle = "rgba(255,255,255,0.5)";
-  ctx.lineWidth = Math.max(2, r * 0.08);
-  ctx.beginPath();
-  ctx.moveTo(0, -r * 0.75);
-  ctx.lineTo(0, r * 0.75);
-  ctx.stroke();
+  ctx.lineWidth = Math.max(3, r * 0.24);
+  ctx.lineCap = "round";
+
+  const blade = 0.68 * r;
+  const arrowLen = r * 0.34;
+
+  for (let i = 0; i < 3; i++) {
+    ctx.save();
+    ctx.rotate((i * 2 * Math.PI) / 3);
+
+    // curved arrow shaft
+    const startAngle = -0.32;
+    const endAngle = 0.85;
+    ctx.beginPath();
+    ctx.arc(0, 0, blade, startAngle, endAngle);
+    ctx.stroke();
+
+    // arrowhead at the tip of the shaft
+    const tipX = Math.cos(endAngle) * blade;
+    const tipY = Math.sin(endAngle) * blade;
+    const tangent = endAngle + Math.PI / 2;
+    const backX = tipX - Math.cos(tangent) * arrowLen;
+    const backY = tipY - Math.sin(tangent) * arrowLen;
+    const normalX = Math.cos(endAngle) * arrowLen * 0.6;
+    const normalY = Math.sin(endAngle) * arrowLen * 0.6;
+
+    ctx.beginPath();
+    ctx.moveTo(tipX + normalX, tipY + normalY);
+    ctx.lineTo(backX, backY);
+    ctx.lineTo(tipX - normalX, tipY - normalY);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
   ctx.restore();
 }
 
@@ -360,7 +385,7 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
         color: "#6E7F5C",
       },
       {
-        draw: (cx, cy, r) => drawLeaf(ctx, cx, cy, r, "#B5714B"),
+        draw: (cx, cy, r) => drawRecycle(ctx, cx, cy, r, "#B5714B"),
         value: `${totals.wasteLbs.toFixed(1)}`,
         label: "lbs waste diverted",
         color: "#B5714B",

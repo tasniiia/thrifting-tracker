@@ -132,7 +132,7 @@ function DropletRow({ bathtubs }: { bathtubs: number }) {
       {Array.from({ length: total }).map((_, i) => (
         <Droplet
           key={i}
-          size={22}
+          size={19}
           className={i < filled ? "text-[#3E6E7A]" : "text-[#A9A290]/25"}
           fill={i < filled ? "#3E6E7A" : "transparent"}
         />
@@ -228,12 +228,12 @@ function ImpactRow({
       >
         {icon}
       </div>
-      <div className="flex-1">
-        <div className="flex items-center gap-1.5">
-          <span style={{ fontFamily: "var(--font-display)", fontWeight: 700 }} className="text-2xl leading-none">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5">
+          <span style={{ fontFamily: "var(--font-display)", fontWeight: 700 }} className="text-xl sm:text-2xl leading-none">
             {value}
           </span>
-          <span className="text-sm text-[#3F3B30]/70">{unit}</span>
+          <span className="text-[13px] sm:text-sm text-[#3F3B30]/70">{unit}</span>
           <InfoTooltip {...METHODOLOGY[methodologyKey]} />
         </div>
         {detail && <p className="text-[12px] text-[#3F3B30]/45 mt-0.5">{detail}</p>}

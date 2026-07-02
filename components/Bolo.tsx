@@ -8,6 +8,7 @@ import { MARKETPLACES } from "../lib/marketplaceLinks";
 import { BoloItem, NewBoloItem, NewThriftItem } from "../lib/types";
 import { ItemFormModal } from "./ItemFormModal";
 import { EmptyState } from "./EmptyState";
+import { ActionMenu } from "./ActionMenu";
 import { useToast } from "../lib/Toast";
 
 const currency = (n: number) =>
@@ -78,20 +79,13 @@ export function Bolo() {
                   >
                     <Sparkles size={16} />
                   </button>
-                  <button
-                    onClick={() => setEditing(b)}
-                    aria-label="Edit"
-                    className="p-1.5 text-[#3F3B30]/50 hover:bg-[#EDE8DC] rounded-full"
-                  >
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    onClick={() => deleteBolo(b.id)}
-                    aria-label="Delete"
-                    className="p-1.5 text-[#A6503B] hover:bg-[#A6503B]/10 rounded-full"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <ActionMenu
+                    items={[
+                      { label: "Edit", icon: <Pencil size={14} />, onClick: () => setEditing(b) },
+                      { label: "Delete", icon: <Trash2 size={14} />, onClick: () => deleteBolo(b.id), danger: true },
+                    ]}
+                    buttonClassName="p-1.5 text-[#3F3B30]/50 hover:bg-[#EDE8DC] rounded-full"
+                  />
                 </div>
               </div>
 
@@ -104,7 +98,7 @@ export function Bolo() {
                     href={m.buildUrl(b.name)}
                     target="_blank"
                     rel="noopener noreferrer sponsored"
-                    className="flex items-center gap-1 text-[11px] font-medium rounded-full px-2.5 py-1 border transition-colors hover:bg-[#F4F1E8]"
+                    className="flex items-center gap-1 text-[10.5px] sm:text-[11px] font-medium rounded-full px-2 sm:px-2.5 py-1 border transition-colors hover:bg-[#F4F1E8]"
                     style={{ borderColor: `${m.color}55`, color: m.color }}
                   >
                     {m.name} <ExternalLink size={9} />

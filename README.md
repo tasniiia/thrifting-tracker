@@ -50,6 +50,8 @@ components/
   EmptyState.tsx           — reusable icon + heading + CTA block for empty lists
   EcoFactStrip.tsx         — small ambient eco-fact pill under the header
   InfoTooltip.tsx          — shared click-to-open tooltip (methodology notes, name explainer)
+  ActionMenu.tsx           — reusable overflow ("⋯") menu, consolidates crowded icon rows
+  ConfirmDialog.tsx        — reusable Yes/No confirmation modal (used before marking an item donated)
 
 lib/
   types.ts                 — ThriftItem (incl. status) / BoloItem / Store types
@@ -224,6 +226,50 @@ changed.
   (`restoreItem` in `ThriftContext.tsx`). Financial and environmental
   totals don't change either way, since they already counted the item
   regardless of its status — only which view it shows up in changes.
+
+## Feedback round: more materials, a better waste icon, less mobile clutter
+
+- **Denim and Satin added as materials.** Denim is sourced directly from
+  Levi Strauss & Co.'s own published cradle-to-grave LCA of a pair of 501
+  jeans (3,781 L water, 33.4 kg CO2e) — scaled to a per-kg rate using this
+  app's 0.8 kg Bottoms weight assumption, it reproduces those exact
+  figures almost perfectly for a denim item in that category (a good sign
+  the underlying model holds together). Satin is different: it's a weave,
+  not a fiber, so there's no clean single LCA figure to cite — published
+  silk data alone varies by two orders of magnitude between sources (some
+  industry claims even market it as "carbon negative"), which made using
+  silk numbers directly too unreliable. Satin is modeled as a Synthetic
+  (polyester) base with a documented ~30–50% increase for the extra
+  finishing satin needs for its sheen — a transparent assumption, called
+  out as such in the code comments, not a cited figure like the others.
+- **Haul Flex's waste icon changed from a leaf to a recycling symbol.**
+  A leaf reads as "eco" generally — a hand-drawn three-arrow recycling
+  glyph (`drawRecycle` in `HaulReceipt.tsx`) says "diverted from landfill"
+  specifically, which is what that stat actually measures. (Worth noting:
+  the Analytics dashboard's "waste diverted" card still uses a leaf icon
+  from lucide-react — that wasn't part of this request, so it's untouched,
+  but happy to make it consistent too if wanted.)
+- **Mobile decluttering, mainly via a new overflow menu.** The Ledger's
+  gallery cards and table rows each had 4 separate icon buttons crammed
+  into a small space — on a narrow 2-column mobile grid that's a lot of
+  tiny tap targets fighting for room. All 4 (Generate Listing, Edit,
+  Mark as Donated, Delete) are now behind a single "⋯" button
+  (`ActionMenu.tsx`, a new reusable component) that opens a clean labeled
+  list on tap. Applied the same pattern to BOLO's Edit/Delete, while
+  keeping the "Found it!" button prominent on its own — burying that one
+  in a menu would undercut the "exciting to tap" feel from an earlier
+  round. Also hid the decorative header tagline below the `sm` breakpoint
+  and tightened the BOLO marketplace-link pills, since both were
+  competing for space unnecessarily on small screens.
+
+- **One more mobile overflow fix in Analytics.** The environmental
+  "Impact Row" (the big bold number + unit text + info icon on one line —
+  e.g. "1,234 lbs of CO₂ avoided ⓘ") had no wrap allowance, so on a narrow
+  phone that could overflow or crowd against the card edge. It now wraps
+  gracefully (`flex-wrap`) and the number's font size steps down slightly
+  on mobile (`text-xl sm:text-2xl`). The 10-droplet water row is also
+  marginally smaller (19px vs. 22px) so it sits more comfortably on
+  narrow widths.
 
 ## Design & implementation notes
 
