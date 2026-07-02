@@ -26,6 +26,38 @@ export const CATEGORIES = Object.keys(IMPACT_FACTORS) as Category[];
 export const GALLONS_PER_BATHTUB = 80;
 export const LBS_CO2_PER_MILE = 0.89;
 
+/** Flat weight credited per donated item toward landfill diversion (Feature 6). */
+export const DONATION_WASTE_LBS = 1.5;
+
+/**
+ * Milestone tiers for the Carbon Footprint Visualizer (Feature 5), keyed by
+ * cumulative lifetime CO2 avoided. `min` is the lbs-of-CO2 threshold to reach
+ * that tier; the icon is resolved in the component (constants.ts stays JSX-free).
+ */
+export const CO2_TIERS = [
+  { name: "Sprout", min: 0, icon: "sprout" as const, color: "#8C9B6E" },
+  { name: "Sapling", min: 100, icon: "sapling" as const, color: "#6E7F5C" },
+  { name: "Forest", min: 300, icon: "forest" as const, color: "#3F4A38" },
+];
+
+/**
+ * Which categories are considered visually/functionally complementary, used
+ * by the mock AI Compatibility Scoring feature. This is a simple stylist
+ * heuristic, not a real recommendation model.
+ */
+export const COMPLEMENTARY_CATEGORIES: Record<Category, Category[]> = {
+  Tops: ["Bottoms", "Outerwear", "Accessories"],
+  Bottoms: ["Tops", "Shoes", "Outerwear"],
+  Dresses: ["Shoes", "Accessories", "Outerwear"],
+  Outerwear: ["Tops", "Bottoms", "Dresses"],
+  Shoes: ["Bottoms", "Dresses", "Accessories"],
+  Accessories: ["Tops", "Dresses", "Outerwear"],
+  "Home Goods": ["Home Goods"],
+  Other: ["Tops", "Bottoms"],
+};
+
+export const VIBE_OPTIONS = ["Earth Tones", "Monochrome", "Bold & Colorful", "Vintage / Retro", "Minimalist"];
+
 export const STORAGE_KEYS = {
   ITEMS: "thrift-tracker:items:v2",
   BOLO: "thrift-tracker:bolo:v2",

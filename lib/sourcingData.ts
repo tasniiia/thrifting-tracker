@@ -10,6 +10,7 @@ import { Category, Store, ThriftItem } from "./types";
 export const STORE_DIRECTORY: Store[] = [
   {
     name: "Bethany Vintage Exchange",
+    routeOrder: 1,
     neighborhood: "Bethany",
     categories: ["Outerwear", "Dresses", "Accessories"],
     vibe: "Curated racks, higher price point, strong on structured coats and going-out pieces.",
@@ -17,6 +18,7 @@ export const STORE_DIRECTORY: Store[] = [
   },
   {
     name: "Cornell Road Thrift Collective",
+    routeOrder: 2,
     neighborhood: "Bethany",
     categories: ["Tops", "Bottoms", "Home Goods"],
     vibe: "Volunteer-run and unsorted — dig-friendly, best when you have a free afternoon.",
@@ -24,6 +26,7 @@ export const STORE_DIRECTORY: Store[] = [
   },
   {
     name: "NW 23rd Consignment",
+    routeOrder: 6,
     neighborhood: "Northwest Portland",
     categories: ["Dresses", "Accessories", "Shoes"],
     vibe: "Boutique-style consignment, polished window displays, occasional designer finds.",
@@ -31,6 +34,7 @@ export const STORE_DIRECTORY: Store[] = [
   },
   {
     name: "Hawthorne Reclaim",
+    routeOrder: 5,
     neighborhood: "SE Hawthorne",
     categories: ["Outerwear", "Bottoms", "Accessories"],
     vibe: "Eclectic and a little punk — great denim and jacket wall, unpredictable sizing.",
@@ -38,6 +42,7 @@ export const STORE_DIRECTORY: Store[] = [
   },
   {
     name: "Alberta Arts Trade Shop",
+    routeOrder: 4,
     neighborhood: "Alberta Arts District",
     categories: ["Tops", "Accessories", "Home Goods"],
     vibe: "Artist-run, rotating pop-up racks, small-batch and locally made mixed in.",
@@ -45,6 +50,7 @@ export const STORE_DIRECTORY: Store[] = [
   },
   {
     name: "Beaverton Community Thrift",
+    routeOrder: 8,
     neighborhood: "Beaverton",
     categories: ["Home Goods", "Bottoms", "Tops", "Other"],
     vibe: "Big-box thrift energy — high volume, low prices, best for frequent short visits.",
@@ -52,6 +58,7 @@ export const STORE_DIRECTORY: Store[] = [
   },
   {
     name: "Sellwood Shoe & Leather Co.",
+    routeOrder: 7,
     neighborhood: "Sellwood",
     categories: ["Shoes", "Accessories"],
     vibe: "Specialty resale for shoes and leather goods, small but reliably well-kept stock.",
@@ -59,6 +66,7 @@ export const STORE_DIRECTORY: Store[] = [
   },
   {
     name: "St. Johns Swap Room",
+    routeOrder: 3,
     neighborhood: "St. Johns",
     categories: ["Outerwear", "Home Goods", "Other"],
     vibe: "Laid-back neighborhood shop, strong on flannel, workwear, and household goods.",
@@ -96,4 +104,15 @@ export function topCategoriesByFrequency(items: ThriftItem[], limit = 2): Catego
   const counts = new Map<Category, number>();
   for (const item of items) counts.set(item.category, (counts.get(item.category) ?? 0) + 1);
   return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([c]) => c);
+}
+
+/**
+ * Mock route optimizer for the "Thrift Circuit" feature. Sorts the selected
+ * stops by each store's fixed `routeOrder` — a hardcoded, illustrative
+ * geographic sequence for this starter directory, not a live routing /
+ * mapping API call. Swap this for a real routing service if you wire the
+ * directory up to live data later.
+ */
+export function buildRoute(selected: Store[]): Store[] {
+  return [...selected].sort((a, b) => a.routeOrder - b.routeOrder);
 }

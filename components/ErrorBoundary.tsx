@@ -21,7 +21,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: unknown) {
     // Replace with your own logging (Sentry, etc.) in production.
-    console.error("ThriftTracker widget error:", error);
+    console.error("Thrift I/O widget error:", error);
   }
 
   render() {

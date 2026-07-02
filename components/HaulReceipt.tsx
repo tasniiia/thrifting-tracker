@@ -175,13 +175,13 @@ function mulberry32(seed: number) {
 /*  Trigger + modal                                                      */
 /* ==================================================================== */
 export function HaulReceiptTrigger() {
-  const { items } = useThrift();
+  const { stats } = useThrift();
   const [open, setOpen] = useState(false);
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        disabled={items.length === 0}
+        disabled={stats.activeCount === 0}
         className="flex items-center gap-1.5 rounded-full border border-[#A9A290]/50 bg-white px-4 py-2 text-sm font-medium hover:bg-[#333829] hover:text-[#F4F1E8] hover:border-[#333829] transition-colors disabled:opacity-40"
       >
         <Receipt size={15} /> Haul Flex
@@ -197,12 +197,17 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imgUrl, setImgUrl] = useState<string | null>(null);
 
+  // Donated items have already left the active closet — a "haul" is about
+  // what's currently in rotation, so those are excluded here even though
+  // they still count toward the lifetime Analytics totals.
+  const activeItems = useMemo(() => items.filter((i) => i.status === "active"), [items]);
+
   const haulItems = useMemo(() => {
-    if (range === "all") return items;
+    if (range === "all") return activeItems;
     const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const recent = items.filter((i) => new Date(i.dateAdded).getTime() >= cutoff);
-    return recent.length > 0 ? recent : items;
-  }, [items, range]);
+    const recent = activeItems.filter((i) => new Date(i.dateAdded).getTime() >= cutoff);
+    return recent.length > 0 ? recent : activeItems;
+  }, [activeItems, range]);
 
   const totals = useMemo(() => {
     const totalPaid = haulItems.reduce((s, i) => s + i.pricePaid, 0);
@@ -275,7 +280,7 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
     ctx.textAlign = "center";
     ctx.fillStyle = "#2B2A22";
     ctx.font = "700 44px monospace";
-    ctx.fillText("SECONDHAND LEDGER", W / 2, y);
+    ctx.fillText("THRIFT I/O", W / 2, y);
 
     y += 40;
     ctx.font = "400 24px monospace";

@@ -3,15 +3,18 @@
 import { Fraunces, DM_Sans, Space_Mono } from "next/font/google";
 import { ShoppingBag, AlertTriangle, X } from "lucide-react";
 import { ThriftProvider, useThrift } from "../lib/ThriftContext";
+import { ToastProvider } from "../lib/Toast";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { Ledger } from "../components/Ledger";
 import { Analytics } from "../components/Analytics";
 import { SourcingGuide } from "../components/SourcingGuide";
+import { CompatibilityCheck } from "../components/CompatibilityCheck";
 import { Bolo } from "../components/Bolo";
 import { HaulReceiptTrigger } from "../components/HaulReceipt";
 
-/* Premium-earthy type system: a warm serif for display, a clean grotesk
-   sans for body copy, and a mono face for every number in the ledger. */
+/* Premium-earthy type system, tuned for the "I/O" tech-forward rebrand: a
+   warm serif for display, a clean grotesk sans for body copy, and a mono
+   face for every number and data point in the ledger. */
 const display = Fraunces({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-display" });
 const bodyFont = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font-body" });
 const mono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-mono" });
@@ -19,10 +22,12 @@ const mono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"], variable: 
 export default function Page() {
   return (
     <div className={`${display.variable} ${bodyFont.variable} ${mono.variable}`}>
-      <ErrorBoundary label="ThriftTracker">
-        <ThriftProvider>
-          <Dashboard />
-        </ThriftProvider>
+      <ErrorBoundary label="Thrift I/O">
+        <ToastProvider>
+          <ThriftProvider>
+            <Dashboard />
+          </ThriftProvider>
+        </ToastProvider>
       </ErrorBoundary>
     </div>
   );
@@ -39,7 +44,7 @@ function Dashboard() {
           <div className="flex items-center gap-2.5">
             <ShoppingBag size={22} strokeWidth={2.25} className="text-[#B5714B]" />
             <span className="text-lg tracking-tight" style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>
-              Secondhand Ledger
+              Thrift <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700 }}>I/O</span>
             </span>
           </div>
           <ErrorBoundary label="Haul Flex">
@@ -71,10 +76,14 @@ function Dashboard() {
               </ErrorBoundary>
             </div>
 
-            {/* side column on desktop, stacks below on mobile */}
+            {/* side column on desktop, stacks below on mobile — the
+               "BOLO/Explore" surface: sourcing, compatibility, hunt list */}
             <div className="flex flex-col gap-6 order-2">
               <ErrorBoundary label="Sourcing guide">
                 <SourcingGuide />
+              </ErrorBoundary>
+              <ErrorBoundary label="Compatibility check">
+                <CompatibilityCheck />
               </ErrorBoundary>
               <ErrorBoundary label="BOLO wishlist">
                 <Bolo />

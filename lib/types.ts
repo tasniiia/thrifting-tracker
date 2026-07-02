@@ -8,6 +8,8 @@ export type Category =
   | "Home Goods"
   | "Other";
 
+export type ItemStatus = "active" | "donated";
+
 export interface ThriftItem {
   id: string;
   name: string;
@@ -19,6 +21,7 @@ export interface ThriftItem {
   wearCount: number;
   dateAdded: string; // yyyy-mm-dd
   notes?: string;
+  status: ItemStatus;
 }
 
 export interface BoloItem {
@@ -36,7 +39,10 @@ export interface Store {
   categories: Category[];
   vibe: string;
   priceRange: "$" | "$$" | "$$$";
+  /** Fixed stop order for the mock "Thrift Circuit" route optimizer — an
+   *  illustrative, hardcoded geographic sequence, not a live routing call. */
+  routeOrder: number;
 }
 
-export type NewThriftItem = Omit<ThriftItem, "id" | "wearCount">;
+export type NewThriftItem = Omit<ThriftItem, "id" | "wearCount" | "status">;
 export type NewBoloItem = Omit<BoloItem, "id" | "dateAdded">;
