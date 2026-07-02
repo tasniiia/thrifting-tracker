@@ -418,6 +418,44 @@ that looks like it works, here's what changed, what didn't, and why.
   same category as the environmental-methodology work from a few rounds
   back.
 
+## Feedback round: relatable-first metrics with real sources, and a retail price benchmark helper
+
+- **Removed the Numbers/Relatable toggle.** The environmental card now
+  leads with the human-scale framing directly — "900 days of drinking
+  water," "58% of the way to a Portland to Eugene round trip" — as the
+  primary bold stat. The literal figures (bathtubs, lbs of CO₂) didn't
+  disappear; they moved to a smaller detail line right underneath, so
+  both are visible at once with nothing to toggle.
+- **Real, clickable sources**, not just a name-drop. Tapping the info icon
+  on the water and CO2 stats now shows actual links at the bottom of the
+  tooltip:
+  - WWF's own page on a cotton t-shirt's water footprint
+  - Levi Strauss & Co.'s own published jeans lifecycle assessment
+    (confirms the exact figures already used for the Denim material)
+  - A peer-reviewed 2024 textile fiber CO₂ study
+  Each one was checked this session to make sure it's real and actually
+  says what it's cited for — no placeholder or guessed URLs.
+- **The CO2 stat links to a live route check.** Next to the driving
+  comparison there's now a small "check this route" link straight to
+  Google Maps directions for whichever landmark round trip was picked, so
+  the distance is independently verifiable, not just asserted.
+- **Retail price benchmark helper.** When logging an item, if you don't
+  know the original retail price, three tier buttons (Fast Fashion /
+  Mid-Tier / Luxury) appear under the price field — tapping one fills in
+  a defensible historical ballpark for that category (e.g. Mid-Tier
+  Bottoms → $90) instead of leaving the field blank or guessing. These
+  are illustrative averages calibrated by category, not a single cited
+  source (retail pricing varies too much by specific brand for one), and
+  the field stays editable afterward. Lives in `RETAIL_TIERS` /
+  `RETAIL_BASELINES` in `lib/constants.ts`.
+- **On the "or use AI to guess from brand/description" alternative**: not
+  built this round. It's the same tradeoff as the BOLO AI recommendations
+  and the compatibility photo scan before it — a live model call needs an
+  API key and costs money per use. The tier-benchmark approach above gets
+  most of the practical value (a real number instead of a blank field)
+  with no setup and no ongoing cost. Happy to build the AI version too if
+  that tradeoff is worth it to you — just say the word.
+
 ## Design & implementation notes
 
 - **Palette**: cream (`#F4F1E8`) background, sage/olive ink (`#2B2A22`,

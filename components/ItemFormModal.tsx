@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { X, Camera, Image as ImageIcon, Loader2, ShoppingBag, Gift, ChevronDown } from "lucide-react";
-import { CATEGORIES, MATERIALS } from "../lib/constants";
+import { CATEGORIES, MATERIALS, RETAIL_TIERS, RETAIL_BASELINES } from "../lib/constants";
 import { compressImage } from "../lib/image";
 import { ItemStatus, Material, NewThriftItem, ThriftItem } from "../lib/types";
 import { BottomSheet, StickyActionBar } from "./BottomSheet";
@@ -232,6 +232,9 @@ export function ItemFormModal({ onClose, onSubmit, initial, prefill }: Props) {
             className="modal-input"
           />
         </Field>
+        {isDonation && (
+          <RetailBenchmarkHelper category={category} onSelect={(price) => setRetailPrice(String(price))} />
+        )}
 
         {/* Progressive disclosure — everything below is secondary detail
            that can wait until after the quick in-store capture. */}
@@ -296,6 +299,7 @@ export function ItemFormModal({ onClose, onSubmit, initial, prefill }: Props) {
                   placeholder="48.00"
                   className="modal-input"
                 />
+                <RetailBenchmarkHelper category={category} onSelect={(price) => setRetailPrice(String(price))} />
               </Field>
             )}
 
@@ -351,5 +355,41 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="text-[11px] uppercase tracking-wide text-[#3F3B30]/50">{label}</span>
       {children}
     </label>
+  );
+}
+
+/**
+ * "Don't know the price?" helper — lets someone pick a rough market tier
+ * instead of guessing or Googling the item's original retail price, and
+ * auto-fills a defensible historical ballpark for that category + tier.
+ * These are illustrative averages, not a precise appraisal — the person
+ * can always overwrite the number afterward.
+ */
+function RetailBenchmarkHelper({
+  category,
+  onSelect,
+}: {
+  category: NewThriftItem["category"];
+  onSelect: (price: number) => void;
+}) {
+  return (
+    <div className="mt-1.5">
+      <p className="text-[10.5px] text-[#3F3B30]/45 mb-1">Not sure? Pick a typical price tier for this category:</p>
+      <div className="flex gap-1.5 flex-wrap">
+        {RETAIL_TIERS.map((tier) => {
+          const price = RETAIL_BASELINES[category][tier];
+          return (
+            <button
+              key={tier}
+              type="button"
+              onClick={() => onSelect(price)}
+              className="text-[11px] font-medium text-[#4F5B3E] border border-[#4F5B3E]/30 rounded-full px-2.5 py-1.5 hover:bg-[#4F5B3E]/10 transition-colors"
+            >
+              {tier} · ${price}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }

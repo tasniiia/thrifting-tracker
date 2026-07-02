@@ -199,6 +199,18 @@ export function drinkingWaterDays(waterGal: number): number {
   return liters / DRINKING_WATER_LITERS_PER_DAY;
 }
 
+export interface RelatableWater {
+  value: string;
+  unit: string;
+}
+
+/** Formats drinking-water days as "X days" under a year, or "X.X years" beyond. */
+export function relatableWater(waterGal: number): RelatableWater {
+  const days = drinkingWaterDays(waterGal);
+  if (days < 365) return { value: Math.round(days).toLocaleString(), unit: "days of drinking water for one person" };
+  return { value: (days / 365).toFixed(1), unit: "years of drinking water for one person" };
+}
+
 /**
  * Round-trip driving distances from Portland to a few notable Oregon
  * cities, used to anchor the CO2 stat to something concrete instead of an
@@ -206,22 +218,44 @@ export function drinkingWaterDays(waterGal: number): number {
  * (Portland→Salem ~47mi, Portland→Eugene ~111mi, Portland→Bend ~160mi one
  * way; doubled here for the round trip) — matches the Sourcing Guide's
  * existing Portland/Bethany-area focus, so the two features stay
- * geographically consistent with each other.
+ * geographically consistent with each other. Each route links to live
+ * Google Maps directions so the distance is independently checkable rather
+ * than taken on faith.
  */
 export const LANDMARK_ROUND_TRIPS = [
-  { label: "Portland to Salem", roundTripMiles: 94 },
-  { label: "Portland to Eugene", roundTripMiles: 222 },
-  { label: "Portland to Bend", roundTripMiles: 320 },
+  {
+    label: "Portland to Salem",
+    roundTripMiles: 94,
+    mapsUrl: "https://www.google.com/maps/dir/Portland,+OR/Salem,+OR/",
+  },
+  {
+    label: "Portland to Eugene",
+    roundTripMiles: 222,
+    mapsUrl: "https://www.google.com/maps/dir/Portland,+OR/Eugene,+OR/",
+  },
+  {
+    label: "Portland to Bend",
+    roundTripMiles: 320,
+    mapsUrl: "https://www.google.com/maps/dir/Portland,+OR/Bend,+OR/",
+  },
 ];
+
+export interface RelatableDriving {
+  value: string;
+  unit: string;
+  mapsUrl: string;
+}
 
 /**
  * Picks whichever landmark round trip is the closest order-of-magnitude
  * match to the given mileage (comparing on a log scale so a very small or
  * very large total doesn't always just default to the smallest/largest
- * entry), then expresses the mileage as a fraction of it or a multiple.
+ * entry), then expresses the mileage as a fraction of it or a multiple —
+ * returned as a value/unit pair so it slots into the same big-number
+ * display every other stat in this app uses.
  */
-export function relatableDriving(miles: number): string {
-  if (miles <= 0) return "";
+export function relatableDriving(miles: number): RelatableDriving | null {
+  if (miles <= 0) return null;
   let best = LANDMARK_ROUND_TRIPS[0];
   let bestScore = Infinity;
   for (const route of LANDMARK_ROUND_TRIPS) {
@@ -234,13 +268,43 @@ export function relatableDriving(miles: number): string {
   const ratio = miles / best.roundTripMiles;
   if (ratio >= 0.97) {
     const trips = Math.round(ratio * 10) / 10;
-    return trips <= 1.05
-      ? `You've offset enough CO₂ to drive from ${best.label} and back.`
-      : `You've offset enough CO₂ to drive from ${best.label} and back ${trips}× over.`;
+    return {
+      value: trips <= 1.05 ? "1" : `${trips}×`,
+      unit: `round trip${trips <= 1.05 ? "" : "s"}: ${best.label} and back`,
+      mapsUrl: best.mapsUrl,
+    };
   }
   const pct = Math.round(ratio * 100);
-  return `You're ${pct}% of the way to offsetting a round trip from ${best.label} and back.`;
+  return {
+    value: `${pct}%`,
+    unit: `of the way to a ${best.label} round trip`,
+    mapsUrl: best.mapsUrl,
+  };
 }
+
+/**
+ * Retail price benchmark helper: when someone doesn't know an item's
+ * original retail price, they can pick a rough market tier instead of
+ * guessing or leaving it blank (which would silently zero out the
+ * environmental-math-unrelated but still meaningful "money saved" stat).
+ * These are illustrative historical ballpark averages, not a single cited
+ * source — retail pricing varies enormously by specific brand and item,
+ * so treat this as a reasonable placeholder to improve on later via Edit,
+ * not a precise appraisal.
+ */
+export type RetailTier = "Fast Fashion" | "Mid-Tier" | "Luxury";
+export const RETAIL_TIERS: RetailTier[] = ["Fast Fashion", "Mid-Tier", "Luxury"];
+
+export const RETAIL_BASELINES: Record<Category, Record<RetailTier, number>> = {
+  Tops: { "Fast Fashion": 20, "Mid-Tier": 45, Luxury: 120 },
+  Bottoms: { "Fast Fashion": 40, "Mid-Tier": 90, Luxury: 220 },
+  Dresses: { "Fast Fashion": 30, "Mid-Tier": 80, Luxury: 350 },
+  Outerwear: { "Fast Fashion": 60, "Mid-Tier": 150, Luxury: 450 },
+  Shoes: { "Fast Fashion": 40, "Mid-Tier": 90, Luxury: 280 },
+  Accessories: { "Fast Fashion": 15, "Mid-Tier": 40, Luxury: 150 },
+  "Home Goods": { "Fast Fashion": 20, "Mid-Tier": 50, Luxury: 150 },
+  Other: { "Fast Fashion": 20, "Mid-Tier": 50, Luxury: 150 },
+};
 
 /** Flat weight credited per donated item toward landfill diversion (Feature 6). */
 export const DONATION_WASTE_LBS = 1.5;
@@ -280,19 +344,33 @@ export const STORAGE_KEYS = {
 };
 
 /** Copy shown inside the info-tooltips on the analytics dashboard. */
-export const METHODOLOGY: Record<"water" | "co2" | "waste", { title: string; body: string }> = {
+export interface MethodologySource {
+  label: string;
+  url: string;
+}
+
+export const METHODOLOGY: Record<"water" | "co2" | "waste", { title: string; body: string; sources: MethodologySource[] }> = {
   water: {
     title: "How water is estimated",
     body:
       "Real per-material water research (e.g. ~10,000 L/kg for cotton) × a typical garment weight for the category. Specify a material for a sharper number.",
+    sources: [
+      { label: "WWF: the water footprint of a cotton t-shirt", url: "https://wwf.panda.org/wwf_news/?199832%2FHelp-us-save-the-t-shirt=" },
+      { label: "Levi Strauss & Co.: jeans lifecycle assessment", url: "https://www.levistrauss.com/2015/03/17/lca-findings/" },
+    ],
   },
   co2: {
     title: "How CO₂ is estimated",
     body:
-      "Same approach as water, using real per-material emissions data — e.g. wool (~24 kg/kg) emits far more than polyester (~9.5 kg/kg).",
+      "Same approach as water, using real per-material emissions data — e.g. wool emits far more CO₂ per kilogram than cotton or polyester.",
+    sources: [
+      { label: "Peer-reviewed textile fiber CO₂ study (2024)", url: "https://www.mdpi.com/1996-1073/17/2/312" },
+      { label: "Levi Strauss & Co.: jeans lifecycle assessment", url: "https://www.levistrauss.com/2015/03/17/lca-findings/" },
+    ],
   },
   waste: {
     title: "How waste diverted is estimated",
     body: "The garment's estimated weight — the same figure used in the water and CO₂ math above.",
+    sources: [],
   },
 };
