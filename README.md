@@ -201,6 +201,30 @@ time specifically to avoid that setup, I wanted to check before building
 another feature with the identical tradeoff rather than assume the answer
 changed.
 
+## Feedback round: shorter tooltips, safer donation flow
+
+- **Info tooltips are much shorter** — every methodology tooltip and the
+  header's "Thrift I/O" explainer went from a paragraph to 1–2 short
+  sentences. The fuller research citations didn't disappear, they just
+  moved to code comments in `lib/constants.ts` where they belong for
+  anyone maintaining the app, rather than cluttering the UI.
+- **Tooltips are mobile-safe now.** `InfoTooltip.tsx` no longer uses a
+  fixed 256px box positioned by a left/right prop that could overflow a
+  phone screen depending on where the icon sits — it's centered under the
+  icon with a width that's clamped to 80% of the viewport
+  (`w-[min(220px,80vw)]`), so it can't spill off either edge regardless of
+  screen size.
+- **Donating now asks for confirmation first.** Tapping the Gift icon
+  (gallery or table view) opens a confirm dialog (`ConfirmDialog.tsx`,
+  a new reusable component) before anything actually changes — no more
+  one-tap-and-it's-gone.
+- **Donations can be undone.** A new "Show donated items (N)" toggle at
+  the bottom of the Ledger reveals previously-donated items with a
+  "Restore" button, which moves them back into the active closet
+  (`restoreItem` in `ThriftContext.tsx`). Financial and environmental
+  totals don't change either way, since they already counted the item
+  regardless of its status — only which view it shows up in changes.
+
 ## Design & implementation notes
 
 - **Palette**: cream (`#F4F1E8`) background, sage/olive ink (`#2B2A22`,

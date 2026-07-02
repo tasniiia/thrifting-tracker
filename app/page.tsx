@@ -66,7 +66,7 @@ function Dashboard() {
                 <InfoTooltip
                   title={'Why "Thrift I/O"?'}
                   body={
-                    'I/O — Input/Output — is one of the first things any CS student learns. Here it doubles as exactly what the app tracks: items thrifted IN through purchases, and items sent OUT through donations. A small joke for anyone who\u2019s spent more time with a terminal than a closet organizer.'
+                    "I/O = Input/Output, a basic CS term — also just what the app tracks: items in via purchases, out via donations."
                   }
                   iconSize={12}
                 />

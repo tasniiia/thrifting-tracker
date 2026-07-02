@@ -13,6 +13,8 @@ import {
   LayoutGrid,
   Rows3,
   Shirt,
+  RefreshCw,
+  ChevronDown,
 } from "lucide-react";
 import { useThrift, savingsFor, cpwFor, impactScoreFor } from "../lib/ThriftContext";
 import { CATEGORY_COLORS } from "../lib/constants";
@@ -21,6 +23,7 @@ import { copyListingToClipboard } from "../lib/listing";
 import { useToast } from "../lib/Toast";
 import { ItemFormModal } from "./ItemFormModal";
 import { EmptyState } from "./EmptyState";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 const currency = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
@@ -64,17 +67,23 @@ function sortItems(items: ThriftItem[], key: SortKey): ThriftItem[] {
 }
 
 export function Ledger() {
-  const { items, addItem, updateItem, deleteItem, addWear, donateItem } = useThrift();
+  const { items, addItem, updateItem, deleteItem, addWear, donateItem, restoreItem } = useThrift();
   const { showToast } = useToast();
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<ThriftItem | null>(null);
   const [filter, setFilter] = useState<string>("All");
   const [sortKey, setSortKey] = useState<SortKey>("newest");
   const [view, setView] = useState<ViewMode>("gallery");
+  const [confirmingDonate, setConfirmingDonate] = useState<ThriftItem | null>(null);
+  const [showDonated, setShowDonated] = useState(false);
 
   // Donated items leave the active Ledger/Gallery views (Feature 6) even
   // though they still count toward the lifetime stats shown in Analytics.
   const activeItems = useMemo(() => items.filter((i) => i.status === "active"), [items]);
+  const donatedItems = useMemo(
+    () => [...items.filter((i) => i.status === "donated")].sort((a, b) => b.dateAdded.localeCompare(a.dateAdded)),
+    [items]
+  );
 
   const categoriesInUse = ["All", ...new Set(activeItems.map((i) => i.category))];
   const filtered = filter === "All" ? activeItems : activeItems.filter((i) => i.category === filter);
@@ -85,9 +94,16 @@ export function Ledger() {
     showToast(ok ? "Copied to clipboard!" : "Couldn't copy — try again.");
   }
 
-  function handleDonate(item: ThriftItem) {
-    donateItem(item.id);
-    showToast(`Marked "${item.name}" as donated`);
+  function confirmDonate() {
+    if (!confirmingDonate) return;
+    donateItem(confirmingDonate.id);
+    showToast(`Marked "${confirmingDonate.name}" as donated`);
+    setConfirmingDonate(null);
+  }
+
+  function handleRestore(item: ThriftItem) {
+    restoreItem(item.id);
+    showToast(`"${item.name}" is back in your active closet`);
   }
 
   return (
@@ -191,7 +207,7 @@ export function Ledger() {
               onWear={() => addWear(item.id)}
               onEdit={() => setEditing(item)}
               onDelete={() => deleteItem(item.id)}
-              onDonate={() => handleDonate(item)}
+              onDonate={() => setConfirmingDonate(item)}
               onGenerateListing={() => handleGenerateListing(item)}
             />
           ))}
@@ -202,9 +218,44 @@ export function Ledger() {
           onWear={(id) => addWear(id)}
           onEdit={setEditing}
           onDelete={deleteItem}
-          onDonate={handleDonate}
+          onDonate={(item) => setConfirmingDonate(item)}
           onGenerateListing={handleGenerateListing}
         />
+      )}
+
+      {/* Donated items are hidden from the active views above, but stay
+         reachable here so an accidental donation can be undone. */}
+      {donatedItems.length > 0 && (
+        <div className="mt-6 pt-5 border-t border-dashed border-[#A9A290]/40">
+          <button
+            onClick={() => setShowDonated((v) => !v)}
+            className="flex items-center gap-1.5 text-[12px] font-medium text-[#3F3B30]/60 hover:text-[#3F3B30]"
+          >
+            <ChevronDown size={14} className={`transition-transform ${showDonated ? "rotate-180" : ""}`} />
+            {showDonated ? "Hide" : "Show"} donated items ({donatedItems.length})
+          </button>
+          {showDonated && (
+            <ul className="mt-3 flex flex-col gap-2">
+              {donatedItems.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex items-center justify-between gap-2 border border-[#A9A290]/25 rounded-lg px-3.5 py-2.5 bg-[#EDE8DC]/40"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium text-[13px] truncate">{item.name}</p>
+                    <p className="text-[11px] text-[#3F3B30]/50">Donated · {item.dateAdded}</p>
+                  </div>
+                  <button
+                    onClick={() => handleRestore(item)}
+                    className="flex items-center gap-1.5 text-[12px] font-medium text-[#4F5B3E] border border-[#4F5B3E]/30 rounded-full px-3 py-1.5 hover:bg-[#4F5B3E]/10 transition-colors shrink-0"
+                  >
+                    <RefreshCw size={12} /> Restore
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
 
       {showAdd && (
@@ -225,6 +276,15 @@ export function Ledger() {
             updateItem(editing.id, patch);
             setEditing(null);
           }}
+        />
+      )}
+      {confirmingDonate && (
+        <ConfirmDialog
+          title="Mark this as donated?"
+          description={`"${confirmingDonate.name}" will leave your active closet — it'll still count toward your lifetime savings and impact stats, and you can restore it later from the "Show donated items" list if needed.`}
+          confirmLabel="Yes, mark as donated"
+          onConfirm={confirmDonate}
+          onCancel={() => setConfirmingDonate(null)}
         />
       )}
     </section>

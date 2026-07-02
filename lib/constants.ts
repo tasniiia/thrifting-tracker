@@ -195,18 +195,17 @@ export const STORAGE_KEYS = {
 /** Copy shown inside the info-tooltips on the analytics dashboard. */
 export const METHODOLOGY: Record<"water" | "co2" | "waste", { title: string; body: string }> = {
   water: {
-    title: "How we estimate water saved",
+    title: "How water is estimated",
     body:
-      "We start from published water-footprint research by material — for example, the Water Footprint Network's widely cited figure of roughly 10,000 liters per kilogram of conventional cotton — then scale it by a typical finished-garment weight for that item's category. If you specify a material (cotton, wool, synthetic, leather) when logging an item, the estimate uses that material's real figures; otherwise it falls back to a blended average across materials. This is still a public-average estimate, not a lab measurement of your specific item.",
+      "Real per-material water research (e.g. ~10,000 L/kg for cotton) × a typical garment weight for the category. Specify a material for a sharper number.",
   },
   co2: {
-    title: "How we estimate CO₂ avoided",
+    title: "How CO₂ is estimated",
     body:
-      "Same category-times-material approach as water, using published per-material emissions research (for example, a 2024 fiber-emissions study found polyester at about 9.5 kg CO2e per kilogram versus wool at about 23.6 kg CO2e per kilogram — a real and large difference this app now accounts for instead of averaging it away). We also translate the total into an equivalent number of driving miles, using roughly 0.89 lbs of CO₂ per mile for an average passenger car.",
+      "Same approach as water, using real per-material emissions data — e.g. wool (~24 kg/kg) emits far more than polyester (~9.5 kg/kg).",
   },
   waste: {
-    title: "How we estimate waste diverted",
-    body:
-      "This one is the most direct: it's simply the estimated weight of the garment itself (or, for leather goods, area converted to an approximate weight) — the same mass figure used in the water and CO2 math above, so all three numbers stay internally consistent with each other rather than being three separately-guessed figures.",
+    title: "How waste diverted is estimated",
+    body: "The garment's estimated weight — the same figure used in the water and CO₂ math above.",
   },
 };

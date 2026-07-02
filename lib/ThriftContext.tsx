@@ -98,6 +98,7 @@ interface ThriftContextValue {
   deleteItem: (id: string) => void;
   addWear: (id: string) => void;
   donateItem: (id: string) => void;
+  restoreItem: (id: string) => void;
   addBolo: (item: NewBoloItem) => void;
   updateBolo: (id: string, patch: Partial<NewBoloItem>) => void;
   deleteBolo: (id: string) => void;
@@ -158,6 +159,13 @@ export function ThriftProvider({ children }: { children: React.ReactNode }) {
    *  totals, since the impact of buying it secondhand already happened. */
   const donateItem = useCallback((id: string) => {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, status: "donated" } : it)));
+  }, []);
+
+  /** Reverses an accidental donation — moves the item back into the active
+   *  closet. Financial/environmental totals are unaffected either way,
+   *  since they already counted the item regardless of status. */
+  const restoreItem = useCallback((id: string) => {
+    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, status: "active" } : it)));
   }, []);
 
   const addBolo = useCallback((item: NewBoloItem) => {
@@ -228,6 +236,7 @@ export function ThriftProvider({ children }: { children: React.ReactNode }) {
     deleteItem,
     addWear,
     donateItem,
+    restoreItem,
     addBolo,
     updateBolo,
     deleteBolo,
