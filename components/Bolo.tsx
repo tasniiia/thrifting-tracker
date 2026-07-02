@@ -42,7 +42,7 @@ export function Bolo() {
           <InfoTooltip
             title="What's a BOLO?"
             body="Be On the Look Out — thrifter slang for a specific item you're actively hunting for. Basically your hunt list."
-            iconSize={11}
+            iconSize={12}
           />
         </h2>
         <button

@@ -40,7 +40,7 @@ app/
 public/
   manifest.json           — PWA manifest (installable "Add to Home Screen")
   sw.js                   — service worker: stale-while-revalidate app-shell caching for offline load
-  icon-192.png            — PWA icon, generated to match the app's shopping-bag-and-leaf logo
+  icon-192.png            — PWA icon + header logo (real uploaded logo, generated at 192px)
   icon-512.png            — PWA icon, larger size
 
 components/
@@ -374,7 +374,7 @@ that looks like it works, here's what changed, what didn't, and why.
 ## Feedback round: real logo, photo picker, wear undo, and hyper-relatable metrics
 
 - **Real logo.** The uploaded shopping-bag-and-hanger logo now replaces the
-  lucide icon combo everywhere: the header (`public/logo-96.png`) and both
+  lucide icon combo everywhere: the header and both
   PWA icons (`public/icon-192.png`, `public/icon-512.png`, regenerated
   from the source file at the correct sizes).
 - **Camera vs. library, explicitly.** Tapping the photo button in "Log an
@@ -455,6 +455,40 @@ that looks like it works, here's what changed, what didn't, and why.
   most of the practical value (a real number instead of a blank field)
   with no setup and no ongoing cost. Happy to build the AI version too if
   that tradeoff is worth it to you — just say the word.
+
+## Feedback round: sharper logo, a real mobile tooltip fix, and top-5 Haul Flex
+
+- **Logo sharpness.** The header was using a separately-generated 96px
+  asset; it now uses the same 192px icon the PWA install icon uses,
+  downscaled to display size with explicit width/height attributes for
+  crisp rendering at any pixel density. Kept it in the header rather than
+  removing it — branding felt worth the one extra asset — but this is an
+  easy one to revisit if it still doesn't look right on your device.
+- **Found and fixed the actual mobile tooltip bug**, not just a
+  symptom. Every info tooltip (methodology, the "Thrift I/O" name
+  explainer, the BOLO explainer) was centering itself relative to its own
+  icon's position — so an icon sitting near a screen edge could still push
+  a width-clamped popup partly off-screen, since clamping the *size*
+  doesn't fix where it *starts*. Below the `sm` breakpoint, the tooltip
+  now anchors to the viewport instead (fixed position, margins from both
+  edges, safe-area-aware bottom padding, with a light tap-to-dismiss
+  backdrop) — it literally cannot be cut off regardless of where the
+  triggering icon lives on the page. Desktop keeps the original
+  compact dropdown, since wide screens don't have this problem.
+- **This is also why BOLO's tooltip looked different** — it's the exact
+  same shared `InfoTooltip` component as everywhere else, just rendered
+  in a narrower sidebar-column position where the cutoff bug was more
+  visible. Fixing the component fixed both at once. I also normalized its
+  icon size (was 11px, everything else is 12–13px) so there's no longer
+  even a pixel-level difference.
+- **Haul Flex shows a clean top 5, no "+N more."** Rather than truncating
+  a chronological list and tacking on a leftover count, it now explicitly
+  picks your top 5 items by money saved for the selected range and shows
+  exactly those — reframed as "top finds & impact" rather than a partial
+  list. This is arguably a better fit for a brag card anyway: a "haul
+  flex" showing your 5 best deals reads better than an arbitrary first-5.
+
+
 
 ## Design & implementation notes
 

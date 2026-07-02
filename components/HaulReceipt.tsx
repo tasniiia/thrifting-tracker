@@ -297,7 +297,7 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
     y += 40;
     ctx.font = "400 24px monospace";
     ctx.fillStyle = "#6B6656";
-    ctx.fillText("haul receipt", W / 2, y);
+    ctx.fillText("top finds & impact", W / 2, y);
 
     y += 50;
     ctx.strokeStyle = "#D8D2C0";
@@ -309,18 +309,18 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // line items, each with a small category-colored dot
+    // line items, each with a small category-colored dot. Shows the top 5
+    // by money saved rather than the first 5 chronologically — a haul flex
+    // is meant to show off your best finds, and this sidesteps ever
+    // needing an awkward "+N more" truncation line: it's a deliberate
+    // top-5 highlight reel, not an incomplete list.
     ctx.textAlign = "left";
     y += 60;
-    // Capped at 4 (down from a flat 6) specifically to make room for full,
-    // untruncated brand + item name text with proper wrapping — a name
-    // that wraps to 2 lines takes roughly double the vertical space a
-    // single truncated line used to, so fewer items fit per receipt.
-    const maxLines = 4;
+    const topItems = [...haulItems].sort((a, b) => savingsFor(b) - savingsFor(a)).slice(0, 5);
     const priceColumnWidth = 130;
     const nameMaxWidth = W - 98 - 70 - priceColumnWidth;
 
-    haulItems.slice(0, maxLines).forEach((item) => {
+    topItems.forEach((item) => {
       const dotColor = CATEGORY_COLORS[item.category];
       const itemStartY = y;
 
@@ -353,12 +353,6 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
 
       y += (nameLines.length - 1) * 34 + 44;
     });
-    if (haulItems.length > maxLines) {
-      ctx.font = "400 26px monospace";
-      ctx.fillStyle = "#6B6656";
-      ctx.fillText(`+ ${haulItems.length - maxLines} more item${haulItems.length - maxLines === 1 ? "" : "s"}`, 98, y);
-      y += 46;
-    }
 
     y += 20;
     ctx.strokeStyle = "#D8D2C0";

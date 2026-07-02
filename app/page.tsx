@@ -57,7 +57,13 @@ function Dashboard() {
         <header className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-96.png" alt="Thrift I/O" className="w-9 h-9 rounded-full shrink-0" />
+            <img
+              src="/icon-192.png"
+              alt="Thrift I/O"
+              width={36}
+              height={36}
+              className="w-9 h-9 rounded-full shrink-0"
+            />
             <div>
               <span className="text-lg tracking-tight flex items-center gap-1.5 leading-none" style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>
                 Thrift <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700 }}>I/O</span>
