@@ -44,5 +44,5 @@ export interface Store {
   routeOrder: number;
 }
 
-export type NewThriftItem = Omit<ThriftItem, "id" | "wearCount" | "status">;
+export type NewThriftItem = Omit<ThriftItem, "id" | "wearCount">;
 export type NewBoloItem = Omit<BoloItem, "id" | "dateAdded">;

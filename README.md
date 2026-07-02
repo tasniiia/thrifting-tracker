@@ -77,6 +77,34 @@ because nothing errors loudly when they're missing in certain setups:
 
 Both are included now, and `layout.tsx` imports `globals.css` directly.
 
+## Feedback round: contrast, clutter, and two new capabilities
+
+- **Haul Flex accessibility fix.** The canvas filled its entire background
+  with a near-black sage (`#3F4A38`) before drawing the lighter paper on
+  top, framing the whole card in dark space. That's now a soft light sage
+  (`#DCE3D0`) — no text sits on a dark background anywhere in the receipt.
+  The percent-off donut chart is also gone, replaced by a plain text pill
+  showing the same number (simpler, and one less thing to visually parse).
+- **Sourcing Guide checkboxes are now opt-in.** They only appear after
+  tapping "Plan a route" — previously every store card showed a checkbox
+  even for people just browsing recommendations, which added clutter with
+  no clear purpose until you actually wanted to build a route.
+- **Purchase vs. Donation distinction at logging time.** `ItemFormModal`
+  now opens with a Purchase/Donation segmented toggle. Donations skip the
+  "you paid" field (you're giving the item away, not buying it), ask for
+  an estimated value instead (used only for the environmental-impact
+  math), and file directly into the donated archive with a toast
+  confirming why it won't show up in the active closet. Previously the
+  only way to log a donation was to first add it as a purchase, then
+  separately mark it donated.
+- **Compatibility Check stays a manual, zero-setup heuristic.** A real
+  Claude-vision-backed photo scan was built and worked, but required an
+  Anthropic API key and paid API usage per scan — that tradeoff wasn't
+  worth it for this app, so it was rolled back by request. `CompatibilityCheck.tsx`
+  is back to a single category + vibe check with no camera, no API call,
+  and no setup, and is upfront in its own copy that it's a stylist
+  heuristic rather than real image analysis.
+
 ## Design & implementation notes
 
 - **Palette**: cream (`#F4F1E8`) background, sage/olive ink (`#2B2A22`,

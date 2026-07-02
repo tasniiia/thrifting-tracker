@@ -1,10 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { X, Camera, Loader2 } from "lucide-react";
+import { X, Camera, Loader2, ShoppingBag, Gift } from "lucide-react";
 import { CATEGORIES } from "../lib/constants";
 import { compressImage } from "../lib/image";
-import { NewThriftItem, ThriftItem } from "../lib/types";
+import { ItemStatus, NewThriftItem, ThriftItem } from "../lib/types";
 
 interface Props {
   onClose: () => void;
@@ -16,6 +16,7 @@ interface Props {
 
 export function ItemFormModal({ onClose, onSubmit, initial, prefill }: Props) {
   const isEdit = Boolean(initial);
+  const [entryType, setEntryType] = useState<ItemStatus>(initial?.status ?? "active");
   const [name, setName] = useState(initial?.name ?? prefill?.name ?? "");
   const [brand, setBrand] = useState(initial?.brand ?? prefill?.brand ?? "");
   const [category, setCategory] = useState(initial?.category ?? prefill?.category ?? "Tops");
@@ -28,7 +29,11 @@ export function ItemFormModal({ onClose, onSubmit, initial, prefill }: Props) {
   const [photoError, setPhotoError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const valid = name.trim().length > 0 && pricePaid !== "" && retailPrice !== "";
+  const isDonation = entryType === "donated";
+  // Donations don't have a "price paid" — you're giving the item away, not
+  // buying it — so that field is skipped and only an estimated value (used
+  // for the environmental-impact math) is asked for.
+  const valid = name.trim().length > 0 && retailPrice !== "" && (isDonation || pricePaid !== "");
 
   async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -52,11 +57,12 @@ export function ItemFormModal({ onClose, onSubmit, initial, prefill }: Props) {
       name: name.trim(),
       brand: brand.trim(),
       category,
-      pricePaid: parseFloat(pricePaid) || 0,
+      pricePaid: isDonation ? 0 : parseFloat(pricePaid) || 0,
       retailPrice: parseFloat(retailPrice) || 0,
       photo,
       dateAdded: date,
       notes: notes.trim() || undefined,
+      status: entryType,
     });
   }
 
@@ -71,10 +77,39 @@ export function ItemFormModal({ onClose, onSubmit, initial, prefill }: Props) {
           <X size={18} />
         </button>
         <h2 className="text-lg font-semibold mb-5" style={{ fontFamily: "var(--font-display)" }}>
-          {isEdit ? "Edit item" : "Log a find"}
+          {isEdit ? "Edit item" : "Log an item"}
         </h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* Purchase vs. Donation — decides which fields show and how the
+             item is filed once saved (active closet vs. donated archive). */}
+          <div className="grid grid-cols-2 gap-2 bg-[#EDE8DC] rounded-full p-1">
+            <button
+              type="button"
+              onClick={() => setEntryType("active")}
+              className={`flex items-center justify-center gap-1.5 rounded-full py-2 text-[13px] font-medium transition-colors ${
+                !isDonation ? "bg-[#333829] text-[#F4F1E8]" : "text-[#3F3B30]/60 hover:text-[#3F3B30]"
+              }`}
+            >
+              <ShoppingBag size={13} /> Purchase
+            </button>
+            <button
+              type="button"
+              onClick={() => setEntryType("donated")}
+              className={`flex items-center justify-center gap-1.5 rounded-full py-2 text-[13px] font-medium transition-colors ${
+                isDonation ? "bg-[#333829] text-[#F4F1E8]" : "text-[#3F3B30]/60 hover:text-[#3F3B30]"
+              }`}
+            >
+              <Gift size={13} /> Donation
+            </button>
+          </div>
+          {isDonation && (
+            <p className="text-[12px] text-[#4F5B3E] bg-[#4F5B3E]/10 rounded-lg px-3 py-2 -mt-1">
+              This logs something you're giving away — it'll count toward your landfill-diversion stats but won't
+              show up in your active closet.
+            </p>
+          )}
+
           {/* photo */}
           <div className="flex items-center gap-4">
             <button
@@ -148,18 +183,20 @@ export function ItemFormModal({ onClose, onSubmit, initial, prefill }: Props) {
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="You paid">
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                value={pricePaid}
-                onChange={(e) => setPricePaid(e.target.value)}
-                placeholder="8.00"
-                className="modal-input"
-              />
-            </Field>
-            <Field label="Retail price">
+            {!isDonation && (
+              <Field label="You paid">
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={pricePaid}
+                  onChange={(e) => setPricePaid(e.target.value)}
+                  placeholder="8.00"
+                  className="modal-input"
+                />
+              </Field>
+            )}
+            <Field label={isDonation ? "Estimated value" : "Retail price"}>
               <input
                 type="number"
                 min={0}
@@ -172,7 +209,7 @@ export function ItemFormModal({ onClose, onSubmit, initial, prefill }: Props) {
             </Field>
           </div>
 
-          <Field label="Date found">
+          <Field label={isDonation ? "Date donated" : "Date found"}>
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="modal-input" />
           </Field>
 
@@ -191,7 +228,7 @@ export function ItemFormModal({ onClose, onSubmit, initial, prefill }: Props) {
             disabled={!valid}
             className="mt-1 rounded-full bg-[#333829] text-[#F4F1E8] py-3 text-sm font-medium hover:bg-[#333829]/85 transition-colors disabled:opacity-40"
           >
-            {isEdit ? "Save changes" : "Add to ledger"}
+            {isEdit ? "Save changes" : isDonation ? "Log donation" : "Add to ledger"}
           </button>
         </form>
       </div>

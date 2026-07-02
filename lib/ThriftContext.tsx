@@ -137,7 +137,7 @@ export function ThriftProvider({ children }: { children: React.ReactNode }) {
   }, [bolo, hydrated]);
 
   const addItem = useCallback((item: NewThriftItem) => {
-    setItems((prev) => [...prev, { ...item, id: uid(), wearCount: 0, status: "active" }]);
+    setItems((prev) => [...prev, { ...item, id: uid(), wearCount: 0 }]);
   }, []);
 
   const updateItem = useCallback((id: string, patch: Partial<NewThriftItem>) => {

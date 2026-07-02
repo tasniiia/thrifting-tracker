@@ -208,7 +208,14 @@ export function Ledger() {
       )}
 
       {showAdd && (
-        <ItemFormModal onClose={() => setShowAdd(false)} onSubmit={(i) => { addItem(i); setShowAdd(false); }} />
+        <ItemFormModal
+          onClose={() => setShowAdd(false)}
+          onSubmit={(i) => {
+            addItem(i);
+            setShowAdd(false);
+            showToast(i.status === "donated" ? "Logged as a donation — thank you!" : "Added to your ledger");
+          }}
+        />
       )}
       {editing && (
         <ItemFormModal

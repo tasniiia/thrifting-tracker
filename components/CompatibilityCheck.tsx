@@ -122,8 +122,7 @@ function CompatibilityModal({ onClose }: { onClose: () => void }) {
 }
 
 function ResultView({ result, category }: { result: CompatibilityResult; category: Category }) {
-  const tone =
-    result.score >= 75 ? "#4F5B3E" : result.score >= 45 ? "#B5714B" : "#A6503B";
+  const tone = result.score >= 75 ? "#4F5B3E" : result.score >= 45 ? "#B5714B" : "#A6503B";
   const label = result.score >= 75 ? "High match" : result.score >= 45 ? "Decent match" : "Low match";
 
   return (

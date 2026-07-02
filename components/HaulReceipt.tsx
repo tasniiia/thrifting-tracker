@@ -72,43 +72,6 @@ function drawLeaf(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: numb
   ctx.restore();
 }
 
-/** A ring/donut chart used to visualize percent-off-retail. */
-function drawDonut(
-  ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  r: number,
-  thickness: number,
-  percent: number,
-  color: string,
-  trackColor: string
-) {
-  ctx.save();
-  ctx.lineCap = "round";
-  ctx.lineWidth = thickness;
-  ctx.strokeStyle = trackColor;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.stroke();
-
-  const clamped = Math.max(0, Math.min(100, percent));
-  const start = -Math.PI / 2;
-  const end = start + Math.PI * 2 * (clamped / 100);
-  ctx.strokeStyle = color;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, start, end);
-  ctx.stroke();
-  ctx.restore();
-
-  ctx.textAlign = "center";
-  ctx.fillStyle = color;
-  ctx.font = "700 44px monospace";
-  ctx.fillText(`${Math.round(clamped)}%`, cx, cy + 15);
-  ctx.font = "400 18px monospace";
-  ctx.fillStyle = "#6B6656";
-  ctx.fillText("OFF RETAIL", cx, cy + 42);
-}
-
 /** Two overlaid horizontal bars comparing what was paid vs. full retail value. */
 function drawPaidVsRetailBars(
   ctx: CanvasRenderingContext2D,
@@ -256,8 +219,9 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // outer backdrop (sage) so the torn paper edge reads clearly
-    ctx.fillStyle = "#3F4A38";
+    // outer backdrop — a soft, light sage so the torn paper edge still
+    // reads clearly, without ever putting text on a dark background
+    ctx.fillStyle = "#DCE3D0";
     ctx.fillRect(0, 0, W, H);
 
     // paper body with torn top/bottom edges
@@ -334,7 +298,7 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // TOTAL SAVED + percent-off donut chart, side by side
+    // TOTAL SAVED + percent-off pill, side by side
     y += 90;
     ctx.font = "700 34px monospace";
     ctx.fillStyle = "#2B2A22";
@@ -344,7 +308,23 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
     ctx.fillStyle = "#B5714B";
     ctx.fillText(currency(totals.totalSaved), 70, y + 55);
 
-    drawDonut(ctx, W - 175, y + 10, 88, 16, totals.percentOff, "#B5714B", "#EEEBE1");
+    if (totals.percentOff > 0) {
+      const pillText = `${Math.round(totals.percentOff)}% OFF`;
+      ctx.font = "700 30px monospace";
+      const textWidth = ctx.measureText(pillText).width;
+      const pillPaddingX = 24;
+      const pillW = textWidth + pillPaddingX * 2;
+      const pillH = 56;
+      const pillX = W - 70 - pillW;
+      const pillY = y - 12;
+      roundRect(ctx, pillX, pillY, pillW, pillH, pillH / 2);
+      ctx.fillStyle = "#EEEBE1";
+      ctx.fill();
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#4F5B3E";
+      ctx.fillText(pillText, pillX + pillW / 2, pillY + pillH / 2 + 10);
+      ctx.textAlign = "left";
+    }
 
     // paid vs. retail bar chart
     y += 150;
