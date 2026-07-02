@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, Download, Receipt } from "lucide-react";
+import { X, Download, Receipt, Share2 } from "lucide-react";
 import { useThrift, savingsFor } from "../lib/ThriftContext";
 import { CATEGORY_COLORS, GALLONS_PER_BATHTUB, LBS_CO2_PER_MILE, computeImpact } from "../lib/constants";
+import { BottomSheet } from "./BottomSheet";
 
 const currency = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
@@ -170,7 +171,7 @@ export function HaulReceiptTrigger() {
       <button
         onClick={() => setOpen(true)}
         disabled={stats.activeCount === 0}
-        className="flex items-center gap-1.5 rounded-full border border-[#A9A290]/50 bg-white px-4 py-2 text-sm font-medium hover:bg-[#333829] hover:text-[#F4F1E8] hover:border-[#333829] transition-colors disabled:opacity-40"
+        className="flex items-center gap-1.5 min-h-[44px] rounded-full border border-[#A9A290]/50 bg-white px-4 text-sm font-medium hover:bg-[#333829] hover:text-[#F4F1E8] hover:border-[#333829] transition-colors disabled:opacity-40"
       >
         <Receipt size={15} /> Haul Flex
       </button>
@@ -440,36 +441,89 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
     a.click();
   }
 
+  /** Tries the native share sheet first (one tap to Instagram/Messages/
+   *  anywhere), and falls back to a plain download if the browser doesn't
+   *  support sharing image files (most desktop browsers, some older
+   *  mobile ones) — so this never dead-ends the person. */
+  function handleShare() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.toBlob(async (blob) => {
+      if (!blob) return handleDownload();
+      const file = new File([blob], "haul-flex-receipt.png", { type: "image/png" });
+      const nav = navigator as Navigator & { canShare?: (data: { files: File[] }) => boolean };
+      if (nav.canShare && nav.canShare({ files: [file] }) && nav.share) {
+        try {
+          await nav.share({
+            files: [file],
+            title: "My Thrift I/O Haul Flex",
+            text: "My secondhand haul and its impact, via Thrift I/O.",
+          });
+          return;
+        } catch {
+          // Person cancelled the share sheet, or it failed silently —
+          // either way, don't force a download on top of that.
+          return;
+        }
+      }
+      handleDownload();
+    }, "image/png");
+  }
+
+  const canUseWebShare =
+    typeof navigator !== "undefined" && typeof (navigator as Navigator & { share?: unknown }).share === "function";
+
   return (
-    <div className="fixed inset-0 bg-[#2B2A22]/55 backdrop-blur-[2px] flex items-end sm:items-center justify-center z-50">
-      <div className="bg-[#F4F1E8] w-full sm:max-w-sm sm:rounded-lg rounded-t-2xl p-5 relative">
-        <button onClick={onClose} aria-label="Close" className="absolute top-4 right-4 text-[#3F3B30]/40 hover:text-[#3F3B30]">
-          <X size={18} />
-        </button>
-        <h2 className="text-lg font-semibold mb-1" style={{ fontFamily: "var(--font-display)" }}>
-          Haul Flex
-        </h2>
-        <p className="text-[12px] text-[#3F3B30]/55 mb-4">Your haul, formatted like a receipt — ready to post.</p>
+    <BottomSheet onClose={onClose}>
+      <button
+        onClick={onClose}
+        aria-label="Close"
+        className="absolute top-2 right-2 w-11 h-11 flex items-center justify-center text-[#3F3B30]/40 hover:text-[#3F3B30]"
+      >
+        <X size={18} />
+      </button>
+      <h2 className="text-lg font-semibold mb-1 pr-10" style={{ fontFamily: "var(--font-display)" }}>
+        Haul Flex
+      </h2>
+      <p className="text-[12px] text-[#3F3B30]/55 mb-4">Your haul, formatted like a receipt — ready to post.</p>
 
-        <div className="flex gap-2 mb-4">
-          <RangeButton active={range === "30d"} onClick={() => setRange("30d")}>Last 30 days</RangeButton>
-          <RangeButton active={range === "all"} onClick={() => setRange("all")}>All time</RangeButton>
-        </div>
+      <div className="flex gap-2 mb-4">
+        <RangeButton active={range === "30d"} onClick={() => setRange("30d")}>Last 30 days</RangeButton>
+        <RangeButton active={range === "all"} onClick={() => setRange("all")}>All time</RangeButton>
+      </div>
 
-        <div className="rounded-lg overflow-hidden mx-auto max-h-[60vh] overflow-y-auto" style={{ maxWidth: 230 }}>
-          <canvas ref={canvasRef} className="w-full h-auto block" />
-        </div>
+      <div className="rounded-lg overflow-hidden mx-auto max-h-[60vh] overflow-y-auto" style={{ maxWidth: 230 }}>
+        <canvas ref={canvasRef} className="w-full h-auto block" />
+      </div>
 
+      {canUseWebShare ? (
+        <>
+          <button
+            onClick={handleShare}
+            disabled={!imgUrl}
+            className="mt-5 w-full min-h-[48px] flex items-center justify-center gap-2 rounded-full bg-[#333829] text-[#F4F1E8] text-sm font-medium hover:bg-[#333829]/85 transition-colors disabled:opacity-40"
+          >
+            <Share2 size={15} /> Share
+          </button>
+          <button
+            onClick={handleDownload}
+            disabled={!imgUrl}
+            className="mt-2 w-full min-h-[44px] flex items-center justify-center gap-2 rounded-full text-[#3F3B30]/60 text-[13px] font-medium hover:bg-[#EDE8DC] transition-colors disabled:opacity-40"
+          >
+            <Download size={13} /> Or just download the image
+          </button>
+        </>
+      ) : (
         <button
           onClick={handleDownload}
           disabled={!imgUrl}
-          className="mt-5 w-full flex items-center justify-center gap-2 rounded-full bg-[#333829] text-[#F4F1E8] py-3 text-sm font-medium hover:bg-[#333829]/85 transition-colors disabled:opacity-40"
+          className="mt-5 w-full min-h-[48px] flex items-center justify-center gap-2 rounded-full bg-[#333829] text-[#F4F1E8] text-sm font-medium hover:bg-[#333829]/85 transition-colors disabled:opacity-40"
         >
           <Download size={15} /> Download for Instagram Story
         </button>
-        <p className="text-[11px] text-[#3F3B30]/45 text-center mt-2.5">1080 × 1920 · sized for stories</p>
-      </div>
-    </div>
+      )}
+      <p className="text-[11px] text-[#3F3B30]/45 text-center mt-2.5">1080 × 1920 · sized for stories</p>
+    </BottomSheet>
   );
 }
 

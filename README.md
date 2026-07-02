@@ -33,19 +33,27 @@ next-env.d.ts             — Next.js TS environment types
 .gitignore
 
 app/
-  layout.tsx              — root layout; imports globals.css (this is what loads Tailwind)
+  layout.tsx              — root layout; imports globals.css, links manifest, registers the service worker
   globals.css             — @tailwind base/components/utilities directives
   page.tsx                — dashboard composition, responsive layout, hydration/error guards
 
+public/
+  manifest.json           — PWA manifest (installable "Add to Home Screen")
+  sw.js                   — service worker: stale-while-revalidate app-shell caching for offline load
+  icon-192.png            — PWA icon, generated to match the app's shopping-bag-and-leaf logo
+  icon-512.png            — PWA icon, larger size
+
 components/
   ErrorBoundary.tsx        — catches render errors per-widget
-  ItemFormModal.tsx        — shared add/edit form (name, brand, category, prices, photo, notes)
+  ServiceWorkerRegister.tsx — registers public/sw.js on mount
+  BottomSheet.tsx          — shared modal shell: bottom sheet on mobile (swipe-to-dismiss), centered on desktop
+  ItemFormModal.tsx        — shared add/edit form; progressive disclosure, native camera capture
   Ledger.tsx               — Gallery/Table view toggle, sort/filter, wear tracking, Generate Listing, Donate, edit/delete
   Analytics.tsx            — financial stats + environmental transparency + carbon footprint visualizer
   SourcingGuide.tsx        — store recommendations + route-optimization "Thrift Circuit"
   CompatibilityCheck.tsx   — mock AI compatibility scoring modal with a match-score ring
-  Bolo.tsx                 — wishlist ("white whale") list + "Found it!" → adds to ledger
-  HaulReceipt.tsx          — canvas-rendered, receipt-styled share card (1080×1920 PNG)
+  Bolo.tsx                 — wishlist ("white whale") list + marketplace links + "Found it!" → adds to ledger
+  HaulReceipt.tsx          — canvas-rendered, receipt-styled share card (1080×1920 PNG); Web Share API
   WelcomeBanner.tsx        — onboarding hero shown when the closet is empty
   EmptyState.tsx           — reusable icon + heading + CTA block for empty lists
   EcoFactStrip.tsx         — small ambient eco-fact pill under the header
@@ -54,13 +62,13 @@ components/
   ConfirmDialog.tsx        — reusable Yes/No confirmation modal (used before marking an item donated)
 
 lib/
-  types.ts                 — ThriftItem (incl. status) / BoloItem / Store types
+  types.ts                 — ThriftItem (incl. status, material) / BoloItem / Store types
   constants.ts             — impact factors, CO2 tiers, compatibility map, storage keys, tooltip copy
   storage.ts               — localStorage wrapper that never throws
   image.ts                 — client-side photo compression before storage
   listing.ts               — reseller listing text builder + clipboard copy
   compatibility.ts         — mock compatibility scoring logic
-  marketplaceLinks.ts      — secondhand marketplace search-link builders (BOLO)
+  marketplaceLinks.ts      — secondhand marketplace search-link builders + category filtering (BOLO)
   sourcingData.ts          — starter store directory, recommendations, route builder
   ThriftContext.tsx        — global state, CRUD + donate actions, derived stats (React Context)
   Toast.tsx                — lightweight toast notification provider
@@ -270,6 +278,98 @@ changed.
   on mobile (`text-xl sm:text-2xl`). The 10-droplet water row is also
   marginally smaller (19px vs. 22px) so it sits more comfortably on
   narrow widths.
+
+## Mobile-First Optimization Sprint
+
+This PRD had two requirements that didn't actually fit how this app is
+built. Rather than silently build around that mismatch or fake something
+that looks like it works, here's what changed, what didn't, and why.
+
+### Two deliberate deviations from the PRD
+
+1. **No "sync to the database" queue, because there's no database.**
+   Feature 3 asked for an IndexedDB offline queue with a "pending sync"
+   icon that pushes to a database on reconnect. This app has never had a
+   backend — every item, BOLO entry, and photo already lives entirely in
+   `localStorage` on the device. That's actually good news: logging a new
+   find **already works with zero network connectivity today**, with or
+   without a service worker, because there was never a network round-trip
+   in that path to begin with. Building a fake sync queue would show a
+   "pending" status that doesn't correspond to anything real — that's
+   worse than not building it. What the service worker (`public/sw.js`)
+   actually adds is the part that was genuinely missing: caching the app
+   shell itself (HTML/JS/CSS) so the *page* can load with zero
+   connectivity, and making the app installable via `public/manifest.json`.
+   If a real backend gets added later, a genuine offline-write-queue would
+   be worth revisiting — it just isn't today.
+2. **No custom URI schemes (`ebay://`, `depop://`) for deep linking.**
+   Feature 4 asked for these with an https:// fallback. I didn't add them,
+   because eBay, Depop, and Poshmark all support Universal Links / App
+   Links today — a plain `https://` link (which is what
+   `lib/marketplaceLinks.ts` already builds) already opens directly in the
+   native app automatically when it's installed, with the browser as an
+   automatic, graceful fallback when it isn't. Custom scheme URIs aren't
+   publicly documented by any of these companies and change without
+   notice — getting one wrong doesn't degrade gracefully like a normal
+   link does, it can throw a "can't open this page" error instead. Adding
+   them would have made deep linking strictly less reliable, not more.
+
+### What was built
+
+- **PWA foundation** (`public/manifest.json`, `public/sw.js`,
+  `components/ServiceWorkerRegister.tsx`): installable "Add to Home
+  Screen" support, brand-matching app icons (192px/512px, generated to
+  match the existing shopping-bag-and-leaf logo), and stale-while-
+  revalidate caching of same-origin requests so the app shell loads
+  offline after the first visit. Registered from `app/layout.tsx`, which
+  also got `viewport-fit: cover` so `env(safe-area-inset-*)` resolves
+  correctly on iOS.
+- **Bottom sheets everywhere, with swipe-to-dismiss.** Every modal in the
+  app (`Log an item`, `Compatibility check`, `Haul Flex`, the BOLO form,
+  and the donate confirmation) now shares one component,
+  `components/BottomSheet.tsx`: centered on desktop, a true bottom sheet
+  on mobile with a drag handle, swipe-down-to-dismiss (only triggers when
+  the sheet is already scrolled to the top, so it doesn't fight with
+  scrolling a long form), and bottom padding that respects
+  `env(safe-area-inset-bottom)` automatically.
+- **Sticky submit button** (`StickyActionBar` in the same file): on
+  `Log an item`, the primary CTA stays pinned to the bottom of the sheet
+  as you scroll through expanded fields, instead of scrolling away with
+  the form.
+- **44px-minimum touch targets** on the controls people actually tap
+  repeatedly in-store: the `ActionMenu` overflow-menu trigger and its
+  rows, every modal's close button, BOLO's Found-it/Edit/Delete cluster,
+  and the Haul Flex trigger and share/download buttons. The one exception
+  is the dense `TableView`'s wear-count badge — that view's whole purpose
+  is information density as an alternative to the spacious Gallery view,
+  so forcing 44px rows there would work against its own reason for
+  existing. Worth a follow-up if you'd rather it be touch-optimized too.
+- **Native camera capture, already partially in place, now consistent.**
+  `capture="environment"` (opens the rear camera directly on supported
+  mobile browsers instead of a generic file picker) is now on the item
+  photo input in `ItemFormModal.tsx`.
+- **Progressive disclosure on "Log an item."** A brand-new entry now opens
+  showing only Photo, Item Name, and You Paid/Estimated Value — Brand,
+  Category, Material, and Retail Price are collapsed behind a
+  "+ Add details" toggle. Editing an existing item still opens fully
+  expanded, since there's no "quick capture" moment for an edit. Category
+  defaults to "Other" instead of "Tops" now, since that's a more honest
+  default for something the person hasn't actually specified yet.
+- **Web Share API for Haul Flex.** Tapping "Share" now tries
+  `navigator.share()` with the receipt image as a file directly — one tap
+  to Instagram, Messages, or anywhere else, no camera-roll round-trip.
+  Falls back automatically to the original direct-download button on
+  browsers that don't support sharing files (most desktop browsers, some
+  older mobile ones), so it never dead-ends.
+- **Marketplace deep-link filtering by category.** Depop and ThredUp
+  (apparel-focused platforms) now hide themselves in the BOLO marketplace
+  links for non-apparel categories (Home Goods, Other) — eBay and
+  Poshmark still show for everything, per the PRD's specific ask.
+- **Fixed a latent bug found along the way:** `Bolo.tsx`'s form was using
+  a `.modal-input` CSS class it never actually defined — it only worked
+  because another component happened to inject that global style first.
+  It now defines its own copy, so it's correct regardless of what else is
+  mounted.
 
 ## Design & implementation notes
 

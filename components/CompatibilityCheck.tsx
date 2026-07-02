@@ -6,6 +6,7 @@ import { useThrift } from "../lib/ThriftContext";
 import { CATEGORIES, VIBE_OPTIONS } from "../lib/constants";
 import { Category } from "../lib/types";
 import { computeCompatibility, CompatibilityResult } from "../lib/compatibility";
+import { BottomSheet } from "./BottomSheet";
 
 export function CompatibilityCheck() {
   const [open, setOpen] = useState(false);
@@ -22,7 +23,7 @@ export function CompatibilityCheck() {
       </p>
       <button
         onClick={() => setOpen(true)}
-        className="mt-4 flex items-center gap-1.5 rounded-full bg-[#333829] text-[#F4F1E8] px-4 py-2 text-sm font-medium hover:bg-[#333829]/85 transition-colors"
+        className="mt-4 flex items-center gap-1.5 rounded-full bg-[#333829] text-[#F4F1E8] px-4 py-2 text-sm font-medium hover:bg-[#333829]/85 transition-colors min-h-[44px]"
       >
         <Wand2 size={14} /> Check compatibility
       </button>
@@ -42,82 +43,84 @@ function CompatibilityModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-[#2B2A22]/45 backdrop-blur-[2px] flex items-end sm:items-center justify-center z-50">
-      <div className="bg-[#F4F1E8] w-full sm:max-w-sm sm:rounded-lg rounded-t-2xl p-6 relative">
-        <button onClick={onClose} aria-label="Close" className="absolute top-4 right-4 text-[#3F3B30]/40 hover:text-[#3F3B30]">
-          <X size={18} />
-        </button>
-        <h2 className="text-lg font-semibold mb-1" style={{ fontFamily: "var(--font-display)" }}>
-          Compatibility check
-        </h2>
-        <p className="text-[12px] text-[#3F3B30]/55 mb-5">
-          A quick stylist heuristic against your closet — not a real vision model, just a useful gut-check.
-        </p>
+    <BottomSheet onClose={onClose}>
+      <button
+        onClick={onClose}
+        aria-label="Close"
+        className="absolute top-2 right-2 w-11 h-11 flex items-center justify-center text-[#3F3B30]/40 hover:text-[#3F3B30]"
+      >
+        <X size={18} />
+      </button>
+      <h2 className="text-lg font-semibold mb-1 pr-10" style={{ fontFamily: "var(--font-display)" }}>
+        Compatibility check
+      </h2>
+      <p className="text-[12px] text-[#3F3B30]/55 mb-5">
+        A quick stylist heuristic against your closet — not a real vision model, just a useful gut-check.
+      </p>
 
-        <div className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[11px] uppercase tracking-wide text-[#3F3B30]/50">Category</span>
-            <select
-              value={category}
-              onChange={(e) => {
-                setCategory(e.target.value as Category);
-                setResult(null);
-              }}
-              className="modal-input"
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[11px] uppercase tracking-wide text-[#3F3B30]/50">Vibe / color story</span>
-            <select
-              value={vibe}
-              onChange={(e) => {
-                setVibe(e.target.value);
-                setResult(null);
-              }}
-              className="modal-input"
-            >
-              {VIBE_OPTIONS.map((v) => (
-                <option key={v} value={v}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <button
-            onClick={handleCheck}
-            className="rounded-full bg-[#333829] text-[#F4F1E8] py-3 text-sm font-medium hover:bg-[#333829]/85 transition-colors"
+      <div className="flex flex-col gap-4">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[11px] uppercase tracking-wide text-[#3F3B30]/50">Category</span>
+          <select
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value as Category);
+              setResult(null);
+            }}
+            className="modal-input"
           >
-            Check compatibility
-          </button>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
 
-          {result && <ResultView result={result} category={category} />}
-        </div>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[11px] uppercase tracking-wide text-[#3F3B30]/50">Vibe / color story</span>
+          <select
+            value={vibe}
+            onChange={(e) => {
+              setVibe(e.target.value);
+              setResult(null);
+            }}
+            className="modal-input"
+          >
+            {VIBE_OPTIONS.map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
+          </select>
+        </label>
 
-        <style jsx global>{`
-          .modal-input {
-            font-family: var(--font-body);
-            background: white;
-            border: 1px solid rgba(169, 162, 144, 0.5);
-            border-radius: 8px;
-            padding: 9px 12px;
-            font-size: 14px;
-            outline: none;
-            width: 100%;
-          }
-          .modal-input:focus {
-            border-color: #4f5b3e;
-          }
-        `}</style>
+        <button
+          onClick={handleCheck}
+          className="min-h-[44px] rounded-full bg-[#333829] text-[#F4F1E8] text-sm font-medium hover:bg-[#333829]/85 transition-colors"
+        >
+          Check compatibility
+        </button>
+
+        {result && <ResultView result={result} category={category} />}
       </div>
-    </div>
+
+      <style jsx global>{`
+        .modal-input {
+          font-family: var(--font-body);
+          background: white;
+          border: 1px solid rgba(169, 162, 144, 0.5);
+          border-radius: 8px;
+          padding: 11px 12px;
+          font-size: 14px;
+          outline: none;
+          width: 100%;
+        }
+        .modal-input:focus {
+          border-color: #4f5b3e;
+        }
+      `}</style>
+    </BottomSheet>
   );
 }
 

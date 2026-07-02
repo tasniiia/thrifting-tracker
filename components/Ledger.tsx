@@ -356,7 +356,7 @@ function GalleryCard({
           <button
             onClick={onWear}
             aria-label="Add a wear"
-            className="flex items-center gap-1 text-[10px] text-white/90 bg-white/15 rounded-full px-2 py-0.5 hover:bg-white/25"
+            className="flex items-center gap-1 min-h-[32px] text-[10px] text-white/90 bg-white/15 rounded-full px-3 hover:bg-white/25"
           >
             <Repeat size={10} /> {item.wearCount}
             {cpw !== null && <span className="hidden sm:inline">· {currency(cpw)}/wear</span>}
