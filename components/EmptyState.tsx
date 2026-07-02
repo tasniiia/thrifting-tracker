@@ -13,8 +13,16 @@ export function EmptyState({
   actionLabel?: string;
   onAction?: () => void;
 }) {
+  const stripedBg: React.CSSProperties = {
+    backgroundImage:
+      "repeating-linear-gradient(135deg, #FBF9F3, #FBF9F3 10px, #F4F1E8 10px, #F4F1E8 20px)",
+  };
+
   return (
-    <div className="flex flex-col items-center text-center py-14 px-6 rounded-xl border border-dashed border-[#A9A290]/40 bg-[repeating-linear-gradient(135deg,#FBF9F3,#FBF9F3_10px,#F4F1E8_10px,#F4F1E8_20px)]">
+    <div
+      className="flex flex-col items-center text-center py-14 px-6 rounded-xl border border-dashed border-[#A9A290]/40"
+      style={stripedBg}
+    >
       <div className="w-14 h-14 rounded-full bg-[#4F5B3E]/10 text-[#4F5B3E] flex items-center justify-center mb-4">
         {icon}
       </div>
