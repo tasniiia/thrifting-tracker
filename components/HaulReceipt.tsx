@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Download, Receipt } from "lucide-react";
 import { useThrift, savingsFor } from "../lib/ThriftContext";
-import { IMPACT_FACTORS, GALLONS_PER_BATHTUB, LBS_CO2_PER_MILE } from "../lib/constants";
+import { CATEGORY_COLORS, GALLONS_PER_BATHTUB, LBS_CO2_PER_MILE, computeImpact } from "../lib/constants";
 
 const currency = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
@@ -177,9 +177,10 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
     const totalRetail = haulItems.reduce((s, i) => s + i.retailPrice, 0);
     const totalSaved = haulItems.reduce((s, i) => s + savingsFor(i), 0);
     const percentOff = totalRetail > 0 ? (totalSaved / totalRetail) * 100 : 0;
-    const waterGal = haulItems.reduce((s, i) => s + IMPACT_FACTORS[i.category].waterGal, 0);
-    const co2Lbs = haulItems.reduce((s, i) => s + IMPACT_FACTORS[i.category].co2Lbs, 0);
-    const wasteLbs = haulItems.reduce((s, i) => s + IMPACT_FACTORS[i.category].wasteLbs, 0);
+    const itemImpacts = haulItems.map((i) => computeImpact(i.category, i.material));
+    const waterGal = itemImpacts.reduce((s, imp) => s + imp.waterGal, 0);
+    const co2Lbs = itemImpacts.reduce((s, imp) => s + imp.co2Lbs, 0);
+    const wasteLbs = itemImpacts.reduce((s, imp) => s + imp.wasteLbs, 0);
     return {
       totalPaid,
       totalRetail,
@@ -266,7 +267,7 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
     y += 60;
     const maxLines = 6;
     haulItems.slice(0, maxLines).forEach((item) => {
-      const dotColor = IMPACT_FACTORS[item.category].color;
+      const dotColor = CATEGORY_COLORS[item.category];
       ctx.beginPath();
       ctx.arc(78, y - 9, 7, 0, Math.PI * 2);
       ctx.fillStyle = dotColor;

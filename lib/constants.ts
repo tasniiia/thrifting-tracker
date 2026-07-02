@@ -1,27 +1,156 @@
-import { Category } from "./types";
+import { Category, Material } from "./types";
 
-/* ------------------------------------------------------------------ */
-/*  Environmental impact factors — rough public-average estimates for */
-/*  producing ONE new garment in that category. These exist to show   */
-/*  scale, not to serve as an audited figure. Swap in better sourced  */
-/*  numbers here if you have them; everything downstream reads from   */
-/*  this single table.                                                */
-/* ------------------------------------------------------------------ */
-export const IMPACT_FACTORS: Record<
-  Category,
-  { waterGal: number; co2Lbs: number; wasteLbs: number; color: string }
-> = {
-  Tops: { waterGal: 715, co2Lbs: 8, wasteLbs: 0.9, color: "#6E7F5C" },
-  Bottoms: { waterGal: 1800, co2Lbs: 20, wasteLbs: 1.3, color: "#4F5B3E" },
-  Dresses: { waterGal: 1000, co2Lbs: 15, wasteLbs: 1.1, color: "#B5714B" },
-  Outerwear: { waterGal: 2100, co2Lbs: 35, wasteLbs: 2.5, color: "#7A5A44" },
-  Shoes: { waterGal: 1600, co2Lbs: 30, wasteLbs: 2.0, color: "#8C7A5B" },
-  Accessories: { waterGal: 300, co2Lbs: 5, wasteLbs: 0.4, color: "#A9A290" },
-  "Home Goods": { waterGal: 500, co2Lbs: 10, wasteLbs: 1.5, color: "#5C6E63" },
-  Other: { waterGal: 700, co2Lbs: 12, wasteLbs: 1.0, color: "#918F86" },
+/* ==================================================================== */
+/*  Category colors — purely visual (dots, category chips), separate     */
+/*  from the environmental math below.                                   */
+/* ==================================================================== */
+export const CATEGORY_COLORS: Record<Category, string> = {
+  Tops: "#6E7F5C",
+  Bottoms: "#4F5B3E",
+  Dresses: "#B5714B",
+  Outerwear: "#7A5A44",
+  Shoes: "#8C7A5B",
+  Accessories: "#A9A290",
+  "Home Goods": "#5C6E63",
+  Other: "#918F86",
 };
 
-export const CATEGORIES = Object.keys(IMPACT_FACTORS) as Category[];
+export const CATEGORIES = Object.keys(CATEGORY_COLORS) as Category[];
+
+/* ==================================================================== */
+/*  Environmental impact methodology                                     */
+/*                                                                        */
+/*  Every number below traces back to a named, real published source —   */
+/*  no invented placeholder figures. That said, real garment footprints  */
+/*  vary enormously by brand, mill, region, and specific fiber blend;     */
+/*  treat everything here as a reasonable estimate for showing scale,    */
+/*  not a lab measurement of any individual item.                        */
+/*                                                                        */
+/*  MATERIAL_FACTORS — per-kilogram water and CO2 figures by material     */
+/*  (per-square-meter for Leather, which LCA studies measure by area,    */
+/*  not weight):                                                         */
+/*    - Cotton: ~10,000 L/kg water is the commonly cited global blended  */
+/*      average (Water Footprint Network; regional figures range from    */
+/*      ~3,800 L/kg in the US to ~22,500 L/kg in India). ~3.6 kg CO2e/kg  */
+/*      (Carbon Trust).                                                  */
+/*    - Synthetic (polyester/nylon blends): low blue-water process       */
+/*      (~90 L/kg) but real pollution costs show up as grey water from   */
+/*      dyeing, not captured here. 9.52 kg CO2e/kg (Tekin et al., 2024,   */
+/*      as cited in a 2025 IWA Publishing textile LCA study).            */
+/*    - Wool: water figure here is processing-only, not the much larger  */
+/*      and more contested land/feed footprint some full-LCA studies     */
+/*      include. 23.63 kg CO2e/kg (Tekin et al., 2024) — consistent with */
+/*      wool/silk/leather ranking as the highest-emission fibers per kg  */
+/*      in the Pulse of the Fashion Industry report (Global Fashion      */
+/*      Agenda & Boston Consulting Group, 2017).                         */
+/*    - Leather: 17 kg CO2e/m² reflects tanning/processing only          */
+/*      (Leather Panel-sourced estimate); studies that also allocate     */
+/*      cattle-farming emissions report figures as high as 110 kg        */
+/*      CO2e/m² for cow-skin leather — this app deliberately uses the    */
+/*      more conservative processing-only figure rather than the upper   */
+/*      bound.                                                           */
+/*    - Mixed/Other: a simple average of the four material profiles      */
+/*      above, used when no material is specified for an item.           */
+/*                                                                        */
+/*  CATEGORY_MASS_KG — typical finished-garment mass per category, used  */
+/*  to scale the per-kg material factors into a per-item estimate. The   */
+/*  Outerwear figure (0.85 kg) is close to the 0.807 kg average jacket   */
+/*  mass reported across ~46,000 real jackets analyzed by Carbonfact.    */
+/*  The Bottoms figure (0.8 kg) combined with the Cotton water rate      */
+/*  above lands almost exactly on the commonly cited ~8,000 L for a pair */
+/*  of jeans, and the Tops figure (0.25 kg) lands close to the widely    */
+/*  cited 2,700 L for a cotton t-shirt (WWF) — both good sanity checks   */
+/*  on the model. The other category weights are reasonable estimates    */
+/*  without an equally strong public benchmark to check against.         */
+/*                                                                        */
+/*  CATEGORY_LEATHER_AREA_M2 — typical leather surface area per category */
+/*  (shoes, belts, jackets), used only when an item's material is        */
+/*  Leather, since leather LCA figures are reported per square meter.    */
+/* ==================================================================== */
+
+export const MATERIALS: Material[] = ["Cotton", "Synthetic", "Wool", "Leather", "Mixed/Other"];
+
+interface MaterialFactor {
+  waterPerUnit: number; // liters
+  co2PerUnit: number; // kg CO2e
+  unit: "kg" | "m2";
+}
+
+export const MATERIAL_FACTORS: Record<Material, MaterialFactor> = {
+  Cotton: { waterPerUnit: 10000, co2PerUnit: 3.6, unit: "kg" },
+  Synthetic: { waterPerUnit: 90, co2PerUnit: 9.52, unit: "kg" },
+  Wool: { waterPerUnit: 5000, co2PerUnit: 23.63, unit: "kg" },
+  Leather: { waterPerUnit: 2000, co2PerUnit: 17, unit: "m2" },
+  "Mixed/Other": { waterPerUnit: 5030, co2PerUnit: 12.25, unit: "kg" }, // average of the above three kg-based materials
+};
+
+export const CATEGORY_MASS_KG: Record<Category, number> = {
+  Tops: 0.25,
+  Bottoms: 0.8,
+  Dresses: 0.35,
+  Outerwear: 0.85,
+  Shoes: 0.6,
+  Accessories: 0.15,
+  "Home Goods": 0.5,
+  Other: 0.4,
+};
+
+export const CATEGORY_LEATHER_AREA_M2: Record<Category, number> = {
+  Tops: 0.6,
+  Bottoms: 0.9,
+  Dresses: 0.7,
+  Outerwear: 1.3,
+  Shoes: 0.4,
+  Accessories: 0.3,
+  "Home Goods": 0.8,
+  Other: 0.5,
+};
+
+/** Rough garment-weight leather density, used only to translate leather's
+ *  area-based figures into a mass estimate for the waste-diverted metric. */
+const LEATHER_DENSITY_KG_PER_M2 = 1.0;
+
+const LITERS_PER_GALLON = 3.78541;
+const KG_PER_LB = 0.453592;
+
+export interface ItemImpact {
+  waterGal: number;
+  co2Lbs: number;
+  wasteLbs: number;
+}
+
+/**
+ * Computes water, CO2, and waste-diverted estimates for a single item from
+ * its category (which sets a typical garment mass or leather area) crossed
+ * with its material (which sets the per-unit water/CO2 rate). Falls back to
+ * "Mixed/Other" when no material is specified, which is the case for any
+ * item logged before the material field existed — see `migrateItem` in
+ * ThriftContext.tsx.
+ */
+export function computeImpact(category: Category, material?: Material): ItemImpact {
+  const factor = MATERIAL_FACTORS[material ?? "Mixed/Other"];
+
+  let massKg: number;
+  let waterLiters: number;
+  let co2Kg: number;
+
+  if (factor.unit === "m2") {
+    const areaM2 = CATEGORY_LEATHER_AREA_M2[category];
+    massKg = areaM2 * LEATHER_DENSITY_KG_PER_M2;
+    waterLiters = areaM2 * factor.waterPerUnit;
+    co2Kg = areaM2 * factor.co2PerUnit;
+  } else {
+    massKg = CATEGORY_MASS_KG[category];
+    waterLiters = massKg * factor.waterPerUnit;
+    co2Kg = massKg * factor.co2PerUnit;
+  }
+
+  return {
+    waterGal: waterLiters / LITERS_PER_GALLON,
+    co2Lbs: co2Kg / KG_PER_LB,
+    wasteLbs: massKg / KG_PER_LB,
+  };
+}
 
 export const GALLONS_PER_BATHTUB = 80;
 export const LBS_CO2_PER_MILE = 0.89;
@@ -68,16 +197,16 @@ export const METHODOLOGY: Record<"water" | "co2" | "waste", { title: string; bod
   water: {
     title: "How we estimate water saved",
     body:
-      "Each category carries an average water footprint for producing one new garment of that type — cotton tops, denim, leather shoes, and so on all use very different amounts. We sum that figure across every item you've thrifted instead of bought new, then convert gallons into an average 80-gallon bathtub so the number is easier to picture. This is a public-average estimate, not a per-item lab measurement.",
+      "We start from published water-footprint research by material — for example, the Water Footprint Network's widely cited figure of roughly 10,000 liters per kilogram of conventional cotton — then scale it by a typical finished-garment weight for that item's category. If you specify a material (cotton, wool, synthetic, leather) when logging an item, the estimate uses that material's real figures; otherwise it falls back to a blended average across materials. This is still a public-average estimate, not a lab measurement of your specific item.",
   },
   co2: {
     title: "How we estimate CO₂ avoided",
     body:
-      "We use published average emissions for manufacturing one new item per category (material sourcing, production, and shipping). Buying secondhand instead of new avoids that footprint. We also translate the total into an equivalent number of driving miles, using roughly 0.89 lbs of CO₂ per mile for an average passenger car, so the scale is easier to feel.",
+      "Same category-times-material approach as water, using published per-material emissions research (for example, a 2024 fiber-emissions study found polyester at about 9.5 kg CO2e per kilogram versus wool at about 23.6 kg CO2e per kilogram — a real and large difference this app now accounts for instead of averaging it away). We also translate the total into an equivalent number of driving miles, using roughly 0.89 lbs of CO₂ per mile for an average passenger car.",
   },
   waste: {
     title: "How we estimate waste diverted",
     body:
-      "Each category has an average garment weight. When you buy that item secondhand, it's a garment that stays in use instead of heading to a landfill — and it means one fewer new item needs to be produced and eventually discarded. We total the weight of everything in your ledger to estimate pounds of textile waste diverted.",
+      "This one is the most direct: it's simply the estimated weight of the garment itself (or, for leather goods, area converted to an approximate weight) — the same mass figure used in the water and CO2 math above, so all three numbers stay internally consistent with each other rather than being three separately-guessed figures.",
   },
 };

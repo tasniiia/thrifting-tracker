@@ -10,11 +10,18 @@ export type Category =
 
 export type ItemStatus = "active" | "donated";
 
+/** Drives the material-aware environmental impact calculation in
+ *  lib/constants.ts (computeImpact). Optional so existing items logged
+ *  before this field existed still work — they fall back to a blended
+ *  "Mixed/Other" average. */
+export type Material = "Cotton" | "Synthetic" | "Wool" | "Leather" | "Mixed/Other";
+
 export interface ThriftItem {
   id: string;
   name: string;
   brand: string;
   category: Category;
+  material?: Material;
   pricePaid: number;
   retailPrice: number;
   photo: string | null; // compressed base64 data URL, or null

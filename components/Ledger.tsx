@@ -15,7 +15,7 @@ import {
   Shirt,
 } from "lucide-react";
 import { useThrift, savingsFor, cpwFor, impactScoreFor } from "../lib/ThriftContext";
-import { IMPACT_FACTORS } from "../lib/constants";
+import { CATEGORY_COLORS } from "../lib/constants";
 import { ThriftItem } from "../lib/types";
 import { copyListingToClipboard } from "../lib/listing";
 import { useToast } from "../lib/Toast";
@@ -249,7 +249,7 @@ function GalleryCard({
   onDonate: () => void;
   onGenerateListing: () => void;
 }) {
-  const impact = IMPACT_FACTORS[item.category];
+  const categoryColor = CATEGORY_COLORS[item.category];
   const saved = savingsFor(item);
   const cpw = cpwFor(item);
 
@@ -265,7 +265,7 @@ function GalleryCard({
       )}
 
       <div className="absolute top-2 left-2 flex items-center gap-1 bg-[#F4F1E8]/90 rounded-full px-2 py-1">
-        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: impact.color }} />
+        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: categoryColor }} />
         <span className="text-[10px] uppercase tracking-wide text-[#3F3B30]/70" style={{ fontFamily: "var(--font-mono)" }}>
           {item.category}
         </span>
@@ -370,7 +370,7 @@ function TableView({
         </thead>
         <tbody>
           {items.map((item) => {
-            const impact = IMPACT_FACTORS[item.category];
+            const categoryColor = CATEGORY_COLORS[item.category];
             const saved = savingsFor(item);
             return (
               <tr key={item.id} className="border-b border-[#A9A290]/15 last:border-0 hover:bg-[#F4F1E8]/60">
@@ -397,7 +397,7 @@ function TableView({
                       <span
                         className="inline-flex items-center gap-1 text-[10px] text-[#3F3B30]/50 sm:hidden mt-0.5"
                       >
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: impact.color }} />
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: categoryColor }} />
                         {item.category}
                       </span>
                     </div>
@@ -405,7 +405,7 @@ function TableView({
                 </td>
                 <td className="py-3 px-2 hidden sm:table-cell">
                   <span className="flex items-center gap-1.5 text-[12px] text-[#3F3B30]/70">
-                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: impact.color }} />
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: categoryColor }} />
                     {item.category}
                   </span>
                 </td>

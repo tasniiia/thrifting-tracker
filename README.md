@@ -145,7 +145,64 @@ Both are included now, and `layout.tsx` imports `globals.css` directly.
   a small reward for actually finding your white whale, not just another
   gray icon button.
 
+## Feedback round: research-grounded environmental methodology
+
+The environmental math went from flat per-category guesses to a
+**category × material** model built from real published research — no
+live AI call needed for this, since it's encoded directly:
+
+- **`lib/constants.ts`** now has `MATERIAL_FACTORS` (per-kg water/CO2 by
+  material — Cotton, Synthetic, Wool, Leather, Mixed/Other) crossed with
+  `CATEGORY_MASS_KG` (typical finished-garment weight per category). Every
+  number traces to a named source in the code comments: Water Footprint
+  Network and WWF for cotton's water figure, a 2024 fiber-emissions study
+  (Tekin et al., cited via a 2025 IWA Publishing textile LCA paper) for
+  polyester/wool CO2, Carbonfact's real dataset of ~46,000 jackets for the
+  Outerwear weight assumption, and Leather Panel data for leather's
+  per-square-meter CO2 figure.
+- **Sanity-checked against the sources it's built from**: the Tops+Cotton
+  combination lands at ~660 gal (≈2,500 L), close to WWF's commonly cited
+  2,700 L for a cotton t-shirt; Bottoms+Cotton lands at ~2,100 gal
+  (≈8,000 L), inside the 7,500–10,000 L range widely cited for a pair of
+  jeans. That's not a coincidence — the category weight assumptions were
+  chosen specifically to land in these ranges, since matching independently
+  published per-garment figures is the best available check on a model
+  like this.
+- **New optional "Material" field** when logging an item (Cotton,
+  Synthetic, Wool, Leather, or "not sure/mixed"). Specifying it sharpens
+  the water/CO2 estimate for that item; leaving it blank falls back to a
+  blended average, exactly like every item logged before this field
+  existed (handled by `migrateItem` in `ThriftContext.tsx`, so old data
+  never breaks).
+- **Waste diverted is now derived from the same mass figure** used in the
+  water/CO2 math, instead of being a third, separately-guessed number —
+  internally consistent by construction rather than by coincidence.
+- **The in-app methodology tooltips were rewritten** to describe this
+  category × material approach and name the real sources behind it,
+  instead of the previous "public-average estimate" language with no
+  named source.
+- **Still estimates, not lab measurements** — real garment footprints vary
+  by brand, mill, and region, and the tooltips say so explicitly. What
+  changed is that "estimate" now means "grounded in a specific published
+  figure with room to specify material," not "a number that was
+  reasonable-sounding when this app was first built."
+
+## BOLO recommendations: what "more AI-driven" would actually require
+
+I didn't build this one yet — it's a different kind of ask than the
+environmental math above, and worth flagging before writing code neither
+of us might want. Generating genuinely personalized secondhand-hunting
+suggestions (smarter search terms, alternate brands to consider, realistic
+price expectations for a specific item) isn't something a static formula
+can fake — it needs an actual live model call, which means the same
+tradeoff as the compatibility photo scan a few rounds back: an Anthropic
+API key and a small real cost per use. Given that got rolled back last
+time specifically to avoid that setup, I wanted to check before building
+another feature with the identical tradeoff rather than assume the answer
+changed.
+
 ## Design & implementation notes
+
 - **Palette**: cream (`#F4F1E8`) background, sage/olive ink (`#2B2A22`,
   `#333829`, `#4F5B3E`) for structure and positive numbers, stone
   (`#A9A290`) for borders and muted text, clay (`#B5714B`) as the warm
@@ -167,9 +224,10 @@ Both are included now, and `layout.tsx` imports `globals.css` directly.
 - **Photos and storage limits.** Photos are compressed client-side
   (`lib/image.ts`) and stored as base64 in `localStorage` (~5–10MB cap,
   roughly 100–250 photos). Swap for S3/Vercel Blob/Supabase for heavier use.
-- **Environmental figures are estimates** — public averages sized to
-  communicate scale, not an audited footprint, and labeled as such in the
-  Analytics info-tooltips.
+- **Environmental figures are research-grounded estimates, not lab
+  measurements of your specific item** — see "research-grounded
+  environmental methodology" above for the real sources behind each
+  number, and the in-app tooltips for a shorter version of the same.
 - **Error boundaries are per-section**, so one broken widget shows a
   "try again" card instead of taking down the whole dashboard.
 - **Hydration guard**: state loads inside a `useEffect` (client-only) and

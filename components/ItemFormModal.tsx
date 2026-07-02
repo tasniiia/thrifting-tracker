@@ -2,9 +2,9 @@
 
 import { useRef, useState } from "react";
 import { X, Camera, Loader2, ShoppingBag, Gift } from "lucide-react";
-import { CATEGORIES } from "../lib/constants";
+import { CATEGORIES, MATERIALS } from "../lib/constants";
 import { compressImage } from "../lib/image";
-import { ItemStatus, NewThriftItem, ThriftItem } from "../lib/types";
+import { ItemStatus, Material, NewThriftItem, ThriftItem } from "../lib/types";
 
 interface Props {
   onClose: () => void;
@@ -20,6 +20,7 @@ export function ItemFormModal({ onClose, onSubmit, initial, prefill }: Props) {
   const [name, setName] = useState(initial?.name ?? prefill?.name ?? "");
   const [brand, setBrand] = useState(initial?.brand ?? prefill?.brand ?? "");
   const [category, setCategory] = useState(initial?.category ?? prefill?.category ?? "Tops");
+  const [material, setMaterial] = useState<Material | "">(initial?.material ?? prefill?.material ?? "");
   const [pricePaid, setPricePaid] = useState(String(initial?.pricePaid ?? ""));
   const [retailPrice, setRetailPrice] = useState(String(initial?.retailPrice ?? prefill?.retailPrice ?? ""));
   const [date, setDate] = useState(initial?.dateAdded ?? new Date().toISOString().slice(0, 10));
@@ -57,6 +58,7 @@ export function ItemFormModal({ onClose, onSubmit, initial, prefill }: Props) {
       name: name.trim(),
       brand: brand.trim(),
       category,
+      material: material || undefined,
       pricePaid: isDonation ? 0 : parseFloat(pricePaid) || 0,
       retailPrice: parseFloat(retailPrice) || 0,
       photo,
@@ -177,6 +179,21 @@ export function ItemFormModal({ onClose, onSubmit, initial, prefill }: Props) {
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
                   {c}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Material (optional — sharpens the impact estimate)">
+            <select
+              value={material}
+              onChange={(e) => setMaterial(e.target.value as Material | "")}
+              className="modal-input"
+            >
+              <option value="">Not sure / mixed</option>
+              {MATERIALS.filter((m) => m !== "Mixed/Other").map((m) => (
+                <option key={m} value={m}>
+                  {m}
                 </option>
               ))}
             </select>

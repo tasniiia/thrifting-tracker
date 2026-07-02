@@ -6,9 +6,9 @@ import {
   CO2_TIERS,
   DONATION_WASTE_LBS,
   GALLONS_PER_BATHTUB,
-  IMPACT_FACTORS,
   LBS_CO2_PER_MILE,
   STORAGE_KEYS,
+  computeImpact,
 } from "./constants";
 import { safeGet, safeSet } from "./storage";
 
@@ -30,8 +30,8 @@ export function cpwFor(item: Pick<ThriftItem, "pricePaid" | "wearCount">) {
  * tuned so no single factor dominates the ranking, not a scientific unit
  * conversion. Used for sorting only; we never display this raw number.
  */
-export function impactScoreFor(item: Pick<ThriftItem, "category">) {
-  const f = IMPACT_FACTORS[item.category];
+export function impactScoreFor(item: Pick<ThriftItem, "category" | "material">) {
+  const f = computeImpact(item.category, item.material);
   return f.waterGal / GALLONS_PER_BATHTUB + f.co2Lbs / 10 + f.wasteLbs * 2;
 }
 
@@ -55,6 +55,7 @@ function migrateItem(raw: Partial<ThriftItem> & { id: string }): ThriftItem {
     name: raw.name ?? "Untitled item",
     brand: raw.brand ?? "",
     category: raw.category ?? "Other",
+    material: raw.material, // undefined is fine — computeImpact falls back to "Mixed/Other"
     pricePaid: raw.pricePaid ?? 0,
     retailPrice: raw.retailPrice ?? 0,
     photo: raw.photo ?? null,
@@ -180,9 +181,10 @@ export function ThriftProvider({ children }: { children: React.ReactNode }) {
     const totalSaved = items.reduce((s, i) => s + savingsFor(i), 0);
     const savingsPercent = totalRetail > 0 ? Math.round((totalSaved / totalRetail) * 100) : 0;
 
-    const waterGal = items.reduce((s, i) => s + IMPACT_FACTORS[i.category].waterGal, 0);
-    const co2Lbs = items.reduce((s, i) => s + IMPACT_FACTORS[i.category].co2Lbs, 0);
-    const wasteLbs = items.reduce((s, i) => s + IMPACT_FACTORS[i.category].wasteLbs, 0);
+    const itemImpacts = items.map((i) => computeImpact(i.category, i.material));
+    const waterGal = itemImpacts.reduce((s, imp) => s + imp.waterGal, 0);
+    const co2Lbs = itemImpacts.reduce((s, imp) => s + imp.co2Lbs, 0);
+    const wasteLbs = itemImpacts.reduce((s, imp) => s + imp.wasteLbs, 0);
 
     const donated = items.filter((i) => i.status === "donated");
     const donatedWasteLbs = donated.length * DONATION_WASTE_LBS;
