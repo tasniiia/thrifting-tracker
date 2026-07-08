@@ -57,17 +57,25 @@ export function Analytics() {
           {power.lattes > 0 && (
             <div className="mt-4 pt-4 border-t border-dashed border-[#A9A290]/40">
               <div className="flex items-center gap-1.5 mb-3">
-                <p className="text-[12px] text-[#3F3B30]/60">That's about</p>
+                <p className="text-[12px] text-[#3F3B30]/60">That's about any ONE of these</p>
                 <InfoTooltip
-                  title="Illustrative, not researched pricing"
-                  body={`Assumes a $${LATTE_PRICE} latte, a $${MOVIE_TICKET_PRICE} movie ticket, and an $${USED_BOOK_PRICE} used book at Powell's — reasonable round numbers, not cited local averages (prices vary a lot shop to shop).`}
+                  title="These are alternatives, not a total"
+                  body={`Three different ways to picture the same savings — not added together. Assumes a $${LATTE_PRICE} latte, a $${MOVIE_TICKET_PRICE} movie ticket, and an $${USED_BOOK_PRICE} used book at Powell's — reasonable round numbers, not cited local averages (prices vary a lot shop to shop).`}
                   iconSize={11}
                 />
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                <PowerColumn icon={Coffee} count={power.lattes} label="lattes" color="#4F5B3E" />
-                <PowerColumn icon={Ticket} count={power.movieTickets} label="movie tix" color="#B5714B" />
-                <PowerColumn icon={BookOpen} count={power.books} label="Powell's books" color="#3E6E7A" />
+              <div className="flex items-center gap-1.5">
+                <div className="flex-1 min-w-0">
+                  <PowerColumn icon={Coffee} count={power.lattes} label="lattes" color="#4F5B3E" />
+                </div>
+                <span className="text-[10px] italic text-[#3F3B30]/35 shrink-0">or</span>
+                <div className="flex-1 min-w-0">
+                  <PowerColumn icon={Ticket} count={power.movieTickets} label="movie tix" color="#B5714B" />
+                </div>
+                <span className="text-[10px] italic text-[#3F3B30]/35 shrink-0">or</span>
+                <div className="flex-1 min-w-0">
+                  <PowerColumn icon={BookOpen} count={power.books} label="Powell's books" color="#3E6E7A" />
+                </div>
               </div>
             </div>
           )}
