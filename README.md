@@ -60,7 +60,6 @@ components/
   InfoTooltip.tsx          — shared click-to-open tooltip (methodology notes, name explainer)
   ActionMenu.tsx           — reusable overflow ("⋯") menu, consolidates crowded icon rows
   ConfirmDialog.tsx        — reusable Yes/No confirmation modal (used before marking an item donated)
-  HaulInsights.tsx         — the four Haul Flex insight cards (on-screen, see changelog for details)
 
 lib/
   types.ts                 — ThriftItem (incl. status, material) / BoloItem / Store types
@@ -529,53 +528,47 @@ stores across Portland and Beaverton, looked up live rather than invented:
   of "real": accurate at compile time, independently verifiable via the
   Maps links, just not self-updating.
 
-## Feature: four hyper-visual Haul Flex insights
+## Feedback round: insights moved into the main dashboard, not the Haul Flex modal
 
-New `components/HaulInsights.tsx` + `lib/haulInsights.ts`, shown as a section
-inside the Haul Flex modal, above the existing shareable receipt preview:
+The four insights from the previous round didn't work as an on-screen
+section inside the Haul Flex modal, so they got reorganized:
 
-1. **Commuter Offset** — a step-count progress ring against a 10,000-step
-   daily goal. The CO2→steps conversion was corrected from the originally
-   suggested "1 lb CO2 ≈ 1,100 steps" (not grounded in anything physically
-   real) to chain through this app's existing, real CO2-per-mile figure
-   into a real, commonly-cited ~2,000-steps-per-mile average instead.
-2. **Time Traveler Span** — a mini timeline showing the gap between the
-   oldest and newest brand founding years matched in the haul, against a
-   ~45-brand dictionary of real, spot-checked founding years (including
-   correctly using 2006 — not 1937 — for Madewell's modern relaunch, which
-   has no actual continuity with the unrelated 1937 workwear maker of the
-   same name).
-3. **Liquid Asset Score** — a paid-vs-resale comparison bar using a
-   brand/category multiplier heuristic. Labeled explicitly as a rough
-   ballpark, not a real marketplace valuation, in both the UI copy and an
-   info tooltip — no heuristic like this can actually know an item's real
-   resale value without knowing its condition, exact model, and current
-   demand.
-4. **Local Purchasing Power** — an icon array of coffee cups (capped at 24
-   before switching to a "+N" summary) showing total savings translated
-   into lattes/movie tickets, using illustrative round prices, same
-   treatment as the retail-tier baselines elsewhere in this app.
-
-**Important architectural note**: this was built exactly as specified —
-a real React component using Tailwind and SVG (progress ring, timeline,
-comparison bars, icon array) — which is a different rendering approach
-than the existing Haul Flex receipt, which draws everything with canvas
-commands so it can be exported as a single shareable PNG. That means
-these four visualizations currently live on-screen inside the modal
-**but are not part of the downloadable/shareable image** — the section
-header in the UI says "(on-screen only)" so this isn't a silent gap.
-Making them part of the actual shareable PNG would mean re-implementing
-the same four charts as canvas draw calls (very doable — this file
-already hand-draws a droplet, a cloud, and a recycling symbol on canvas —
-just additional work I didn't want to do silently without flagging the
-tradeoff first).
-
-One more honest flag: `Activity` and `Coffee` (the icons for two of the
-four cards) haven't been exercised in a real build of this project the
-way most of the other icons here have — `Clock` and `TrendingUp` are
-extremely standard and low-risk, but if the next Vercel build throws an
-"Attempted import error" on either of the other two, that's the likely
-cause, same failure mode as the `Binoculars` icon a few rounds back.
+- **Commuter Offset (steps) was dropped entirely** — it was redundant with
+  the CO2-to-driving-distance relatable metric already in the Environmental
+  Transparency card (same underlying CO2 number, two different physical
+  metaphors competing for attention). `lib/haulInsights.ts` no longer
+  contains this calculation at all.
+- **`components/HaulInsights.tsx` (the standalone on-screen block) is
+  gone.** Its contents were split up and folded directly into
+  `components/Analytics.tsx`, the app's main dashboard, alongside the
+  existing financial and environmental stats:
+  - **Local Purchasing Power** (lattes/movie tickets, icon array) now
+    lives inside the Financial Impact card, right under the existing
+    stats grid — it's the same "make the raw number relatable" treatment
+    already used for water and CO2, just extended to cover the dollar
+    figure too.
+  - **Time Traveler Span** and **Liquid Asset Score** now live together
+    in a new "Closet Character" card, placed below the Carbon Footprint
+    Visualizer. This card is explicitly labeled "(fun, illustrative — not
+    hard data)" in its own header, keeping it visually and tonally
+    distinct from the harder financial/environmental numbers above it —
+    both of these are heuristics (a brand-year lookup and a resale
+    multiplier), not measured facts, and the design should say so plainly
+    rather than let them blend in with numbers that are actual facts.
+- **Two of the four made it into the actual shareable Haul Flex receipt**,
+  as real canvas-drawn text matching the receipt's existing monospace
+  style — a compact two-column strip ("53 yrs of fashion history" / "12
+  lattes saved") between the Environmental Wins panel and the barcode.
+  **Liquid Asset Score deliberately did not** — its "rough ballpark, not a
+  valuation" caveat lives in an in-app tooltip that wouldn't travel with a
+  shared screenshot, and a bare "$340 resale value" with no caveat visible
+  would read as a harder, more authoritative claim once it's out of this
+  app's context than it actually is.
+- **`Activity` icon is gone** along with Commuter Offset. `Coffee`,
+  `Clock`, and `TrendingUp` are still in use (Financial Impact and Closet
+  Character cards) — `Clock`/`TrendingUp` are extremely standard, `Coffee`
+  still hasn't been exercised in an actual build of this project, same
+  caveat as last round.
 
 ## Design & implementation notes
 

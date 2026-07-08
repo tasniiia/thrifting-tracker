@@ -1,8 +1,9 @@
 "use client";
 
-import { Droplet, Leaf, Cloud, Sprout, TreeDeciduous, Trees, Gift, ExternalLink } from "lucide-react";
+import { Droplet, Leaf, Cloud, Sprout, TreeDeciduous, Trees, Gift, ExternalLink, Clock, TrendingUp, Coffee } from "lucide-react";
 import { useThrift } from "../lib/ThriftContext";
 import { METHODOLOGY, relatableWater, relatableDriving } from "../lib/constants";
+import { fashionHistorySpan, totalLiquidAsset, purchasingPower, LATTE_PRICE, MOVIE_TICKET_PRICE, MAX_ICONS_SHOWN } from "../lib/haulInsights";
 import { InfoTooltip } from "./InfoTooltip";
 
 const currency = (n: number) =>
@@ -11,9 +12,12 @@ const currency = (n: number) =>
 const TIER_ICONS = { sprout: Sprout, sapling: TreeDeciduous, forest: Trees } as const;
 
 export function Analytics() {
-  const { stats } = useThrift();
+  const { items, stats } = useThrift();
   const water = relatableWater(stats.bathtubs);
   const driving = relatableDriving(stats.milesDriven);
+  const power = purchasingPower(stats.totalSaved);
+  const span = fashionHistorySpan(items);
+  const { paid, resale } = totalLiquidAsset(items);
 
   return (
     <section className="flex flex-col gap-4">
@@ -42,6 +46,27 @@ export function Analytics() {
             <Stat label="Items tracked" value={String(stats.count)} />
             <Stat label="Avg. saved / item" value={stats.count ? currency(stats.totalSaved / stats.count) : "—"} />
           </div>
+
+          {power.lattes > 0 && (
+            <div className="mt-4 pt-4 border-t border-dashed border-[#A9A290]/40">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Coffee size={13} className="text-[#4F5B3E]" />
+                <p className="text-[12px] text-[#3F3B30]/60">That's about</p>
+                <InfoTooltip
+                  title="Illustrative, not researched pricing"
+                  body={`Assumes a $${LATTE_PRICE} latte and a $${MOVIE_TICKET_PRICE} movie ticket — reasonable round numbers, not a cited local average (prices vary a lot shop to shop).`}
+                  iconSize={11}
+                />
+              </div>
+              <IconArray count={power.lattes} />
+              <p className="text-[11px] text-[#3F3B30]/45 mt-1.5">
+                {power.lattes} latte{power.lattes === 1 ? "" : "s"}
+                {power.movieTickets > 0 && (
+                  <> · or {power.movieTickets} movie ticket{power.movieTickets === 1 ? "" : "s"}</>
+                )}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* environmental — leads with the human-scale ("relatable") framing,
@@ -126,6 +151,75 @@ export function Analytics() {
           </div>
         )}
       </div>
+
+      {/* Closet Character — fun, explicitly illustrative insights, kept
+         visually and tonally separate from the hard financial/environmental
+         numbers above since both of these are heuristics, not facts. */}
+      {(span || paid > 0) && (
+        <div className="bg-white border border-[#A9A290]/30 rounded-lg p-6 shadow-sm">
+          <div className="flex items-center gap-1.5">
+            <h2 className="text-[11px] uppercase tracking-[0.2em] text-[#3F3B30]/45" style={{ fontFamily: "var(--font-mono)" }}>
+              closet character
+            </h2>
+            <span className="text-[10px] text-[#3F3B30]/35">(fun, illustrative — not hard data)</span>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-6 mt-4">
+            <div>
+              <div className="flex items-center gap-1.5 mb-2">
+                <Clock size={13} className="text-[#B5714B]" />
+                <p className="text-[12px] text-[#3F3B30]/60">Time Traveler Span</p>
+                <InfoTooltip
+                  title="How this works"
+                  body="Matches logged brands against a small built-in dictionary of real founding years. Only brands in that list count — a lot of brands simply won't match yet."
+                  iconSize={11}
+                />
+              </div>
+              {span ? (
+                <div>
+                  <p className="text-2xl font-bold leading-none" style={{ fontFamily: "var(--font-display)" }}>
+                    {span.spanYears}{" "}
+                    <span className="text-sm font-normal text-[#3F3B30]/60">years of fashion history</span>
+                  </p>
+                  <Timeline />
+                  <div className="flex justify-between text-[11px] text-[#3F3B30]/50 mt-1">
+                    <span className="truncate max-w-[45%]">
+                      {span.oldestBrand} &apos;{String(span.oldestYear).slice(-2)}
+                    </span>
+                    <span className="truncate max-w-[45%] text-right">
+                      {span.newestBrand} &apos;{String(span.newestYear).slice(-2)}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[12px] text-[#3F3B30]/45 leading-snug">
+                  No recognized brands yet — add a brand name when logging an item to unlock this.
+                </p>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center gap-1.5 mb-2">
+                <TrendingUp size={13} className="text-[#4F5B3E]" />
+                <p className="text-[12px] text-[#3F3B30]/60">Liquid Asset Score</p>
+                <InfoTooltip
+                  title="This is a rough ballpark, not a valuation"
+                  body="A simple brand/category multiplier (1.3×–3.5×) applied to what you paid — not a real marketplace appraisal, which depends on condition, exact model, and current demand."
+                  iconSize={11}
+                />
+              </div>
+              {paid > 0 ? (
+                <div className="flex flex-col gap-2">
+                  <ComparisonBar label="You paid" value={paid} max={Math.max(paid, resale)} color="#A9A290" />
+                  <ComparisonBar label="Resale ballpark" value={resale} max={Math.max(paid, resale)} color="#4F5B3E" />
+                </div>
+              ) : (
+                <p className="text-[12px] text-[#3F3B30]/45 leading-snug">Log a find to see this estimate.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -262,6 +356,47 @@ function ImpactRow({
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Fashion-history mini timeline — two endpoint dots on a line. */
+function Timeline() {
+  return (
+    <div className="relative h-2 mt-2 mb-1">
+      <div className="absolute inset-y-0 left-0 right-0 my-auto h-[2px] bg-[#A9A290]/40 rounded-full" />
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#B5714B]" />
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#4F5B3E]" />
+    </div>
+  );
+}
+
+/** Paid-vs-resale (or any two-value) comparison bar. */
+function ComparisonBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
+  const pct = max > 0 ? Math.max(4, (value / max) * 100) : 0;
+  return (
+    <div>
+      <div className="flex justify-between text-[11px] text-[#3F3B30]/55 mb-1">
+        <span>{label}</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700 }}>{currency(value)}</span>
+      </div>
+      <div className="h-2.5 rounded-full bg-[#EDE8DC] overflow-hidden">
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
+    </div>
+  );
+}
+
+/** Icon array (coffee cups), capped with a "+N" summary beyond that. */
+function IconArray({ count }: { count: number }) {
+  const shown = Math.min(count, MAX_ICONS_SHOWN);
+  const overflow = count - shown;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {Array.from({ length: shown }).map((_, i) => (
+        <Coffee key={i} size={14} className="text-[#4F5B3E]" />
+      ))}
+      {overflow > 0 && <span className="text-[11px] text-[#3F3B30]/50 self-center ml-0.5">+{overflow}</span>}
     </div>
   );
 }

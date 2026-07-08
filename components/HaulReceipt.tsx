@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Download, Receipt, Share2 } from "lucide-react";
 import { useThrift, savingsFor } from "../lib/ThriftContext";
 import { CATEGORY_COLORS, GALLONS_PER_BATHTUB, LBS_CO2_PER_MILE, computeImpact } from "../lib/constants";
+import { fashionHistorySpan, purchasingPower } from "../lib/haulInsights";
 import { BottomSheet } from "./BottomSheet";
-import { HaulInsights } from "./HaulInsights";
 
 const currency = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
@@ -453,6 +453,48 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
 
     y += panelH;
 
+    // fun facts strip — the two most shareable "closet character" insights.
+    // Liquid Asset Score is deliberately left out of this public image: its
+    // heuristic caveat lives in an in-app tooltip that wouldn't travel with
+    // a shared screenshot, and a bare "$340 resale value" number with no
+    // caveat attached would read as a harder claim than it actually is.
+    const span = fashionHistorySpan(haulItems);
+    const power = purchasingPower(totals.totalSaved);
+    if (span || power.lattes > 0) {
+      y += 55;
+      const half = (W - 140) / 2;
+      ctx.textAlign = "center";
+
+      if (span) {
+        const cx = power.lattes > 0 ? 70 + half / 2 : W / 2;
+        ctx.font = "700 48px monospace";
+        ctx.fillStyle = "#2B2A22";
+        ctx.fillText(`${span.spanYears}`, cx, y);
+        ctx.font = "400 20px monospace";
+        ctx.fillStyle = "#6B6656";
+        ctx.fillText("yrs of fashion history", cx, y + 32);
+      }
+      if (power.lattes > 0) {
+        const cx = span ? 70 + half + half / 2 : W / 2;
+        ctx.font = "700 48px monospace";
+        ctx.fillStyle = "#2B2A22";
+        ctx.fillText(`${power.lattes}`, cx, y);
+        ctx.font = "400 20px monospace";
+        ctx.fillStyle = "#6B6656";
+        ctx.fillText(power.lattes === 1 ? "latte saved" : "lattes saved", cx, y + 32);
+      }
+      if (span && power.lattes > 0) {
+        ctx.strokeStyle = "#D8D2C0";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(W / 2, y - 42);
+        ctx.lineTo(W / 2, y + 14);
+        ctx.stroke();
+      }
+      ctx.textAlign = "left";
+      y += 60;
+    }
+
     // barcode
     const barcodeY = y + 70;
     let bx = 70;
@@ -530,12 +572,6 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
         <RangeButton active={range === "all"} onClick={() => setRange("all")}>All time</RangeButton>
       </div>
 
-      <p className="text-[10px] uppercase tracking-wide text-[#3F3B30]/40 mb-2">Extra insights (on-screen only)</p>
-      <div className="mb-5">
-        <HaulInsights items={haulItems} />
-      </div>
-
-      <p className="text-[10px] uppercase tracking-wide text-[#3F3B30]/40 mb-2">Shareable receipt</p>
       <div className="rounded-lg overflow-hidden mx-auto max-h-[60vh] overflow-y-auto" style={{ maxWidth: 230 }}>
         <canvas ref={canvasRef} className="w-full h-auto block" />
       </div>

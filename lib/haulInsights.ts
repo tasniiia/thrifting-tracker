@@ -1,28 +1,7 @@
 import { ThriftItem } from "./types";
-import { LBS_CO2_PER_MILE } from "./constants";
 
 /* ==================================================================== */
-/*  1. Commuter Offset — CO2 → equivalent driving miles (already a real, */
-/*  grounded conversion used elsewhere in this app) → equivalent walking */
-/*  steps for that same distance, using ~2,000 steps/mile — a widely     */
-/*  cited average (referenced against CDC/AHA walking-pace research;      */
-/*  individual stride length varies by height and fitness level).        */
-/*                                                                        */
-/*  Note: a direct "steps per lb of CO2" conversion isn't something that  */
-/*  exists in physical reality — walking doesn't offset carbon the way   */
-/*  avoiding a mile of driving does. This chains through the app's real   */
-/*  CO2-per-mile figure instead of inventing a new unfounded constant.    */
-/* ==================================================================== */
-export const STEPS_PER_MILE = 2000;
-export const DAILY_STEP_GOAL = 10000;
-
-export function commuterOffsetSteps(co2Lbs: number): number {
-  const miles = co2Lbs / LBS_CO2_PER_MILE;
-  return Math.round(miles * STEPS_PER_MILE);
-}
-
-/* ==================================================================== */
-/*  2. Time Traveler Span — brand founding-year lookup.                  */
+/*  1. Time Traveler Span — brand founding-year lookup.                  */
 /*                                                                        */
 /*  Founding years below are real, verified dates for each brand's       */
 /*  current corporate identity — spot-checked this session, notably      */
@@ -119,7 +98,7 @@ export function fashionHistorySpan(items: ThriftItem[]): FashionSpan | null {
 }
 
 /* ==================================================================== */
-/*  3. Liquid Asset Score — a rough resale BALLPARK, not a real          */
+/*  2. Liquid Asset Score — a rough resale BALLPARK, not a real          */
 /*  marketplace valuation. No paid API can tell us an item's actual      */
 /*  current resale value without knowing its specific condition, exact   */
 /*  model, and platform demand — this is a heuristic multiplier and the  */
@@ -178,7 +157,7 @@ export function totalLiquidAsset(items: ThriftItem[]) {
 }
 
 /* ==================================================================== */
-/*  4. Local Purchasing Power — illustrative Portland-flavored price     */
+/*  3. Local Purchasing Power — illustrative Portland-flavored price     */
 /*  points, not researched/cited "average" prices (coffee and movie      */
 /*  ticket prices vary too much shop-to-shop for a single defensible     */
 /*  citation) — same treatment as the retail-tier baselines elsewhere    */
