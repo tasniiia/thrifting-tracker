@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Pencil, X, CheckCircle2, Search, ExternalLink } from "lucide-react";
+import { Plus, Trash2, Pencil, X, CheckCircle2, Search, ExternalLink, Tag } from "lucide-react";
 import { useThrift } from "../lib/ThriftContext";
 import { CATEGORIES } from "../lib/constants";
 import { marketplacesForCategory } from "../lib/marketplaceLinks";
@@ -167,7 +167,7 @@ function FoundItButton({ onClick }: { onClick: () => void }) {
   const [pressed, setPressed] = useState(false);
 
   function handleClick() {
-    const colors = ["#F4F1E8", "#D9E0CD", "#B5714B"];
+    const colors = ["#F4F1E8", "#A9A290", "#B5714B"];
     const burst = Array.from({ length: 10 }).map((_, i) => {
       const angle = Math.random() * Math.PI * 2;
       const dist = 26 + Math.random() * 26;
@@ -183,17 +183,21 @@ function FoundItButton({ onClick }: { onClick: () => void }) {
     setPressed(true);
     setTimeout(() => setParticles([]), 650);
     setTimeout(() => setPressed(false), 160);
-    onClick();
+    // Delay opening the modal so the confetti burst actually has a moment
+    // to play — calling onClick immediately (which opens the "log it"
+    // BottomSheet) covered the burst before it was visible, especially on
+    // mobile where the sheet takes over most of the screen right away.
+    setTimeout(onClick, 450);
   }
 
   return (
     <div className="relative">
       <button
         onClick={handleClick}
-        className="w-full flex items-center justify-center gap-2 rounded-full bg-[#333829] text-[#F4F1E8] py-2.5 text-sm font-semibold hover:bg-[#333829]/85 transition-colors"
+        className="w-full flex items-center justify-center gap-2 rounded-full bg-[#4F5B3E] text-[#F4F1E8] py-2.5 text-sm font-semibold hover:bg-[#4F5B3E]/85 transition-colors"
         style={{ transform: pressed ? "scale(0.96)" : "scale(1)", transition: "transform 0.15s ease-out" }}
       >
-        <CheckCircle2 size={16} /> Found it!
+        <CheckCircle2 size={16} /> Found it! <Tag size={14} />
       </button>
       <div className="absolute inset-0 pointer-events-none overflow-visible">
         {particles.map((p) => (

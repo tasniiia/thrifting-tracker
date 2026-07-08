@@ -678,6 +678,28 @@ as an interactive mockup) before building the chosen direction:
   verified working elsewhere in this exact app (`lib/Toast.tsx`), so this
   introduces zero new icon-import risk.
 
+## Feedback round: confetti timing fix, lighter sage, tag icon
+
+Three fixes to the Found-it button from the previous round:
+
+- **The confetti wasn't visible, especially on mobile — found the actual
+  cause.** `onClick` (which opens the "log it" BottomSheet) was firing
+  synchronously alongside the confetti burst, so the sheet — which takes
+  over nearly the full screen almost instantly on mobile — covered the
+  animation before it had a chance to play. `onClick` is now deferred via
+  `setTimeout(onClick, 450)`, so the burst gets a real moment on screen
+  before the modal takes over.
+- **Button color changed from `#333829` to `#4F5B3E`** per request.
+  Confetti particle colors were also adjusted (swapped a light sage tint
+  for stone `#A9A290`) so they still read clearly against the new,
+  somewhat lighter button background.
+- **Added a tag icon** (`Tag` from lucide-react) at the end of the
+  button's label, alongside the existing checkmark — a small nod to the
+  BOLO feature's whole "hunting for a specific item" premise. This is a
+  new, unverified icon in this build (same caveat as `Ticket`/`BookOpen`
+  a few rounds back) — very standard and low-risk, but flagging it since
+  I can't run an actual build here to confirm.
+
 ## Design & implementation notes
 
 - **Palette**: cream (`#F4F1E8`) background, sage/olive ink (`#2B2A22`,
