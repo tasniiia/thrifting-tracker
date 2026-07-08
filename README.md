@@ -60,6 +60,7 @@ components/
   InfoTooltip.tsx          — shared click-to-open tooltip (methodology notes, name explainer)
   ActionMenu.tsx           — reusable overflow ("⋯") menu, consolidates crowded icon rows
   ConfirmDialog.tsx        — reusable Yes/No confirmation modal (used before marking an item donated)
+  HaulInsights.tsx         — the four Haul Flex insight cards (on-screen, see changelog for details)
 
 lib/
   types.ts                 — ThriftItem (incl. status, material) / BoloItem / Store types
@@ -71,6 +72,7 @@ lib/
   marketplaceLinks.ts      — secondhand marketplace search-link builders + category filtering (BOLO)
   sourcingData.ts          — starter store directory, recommendations, route builder
   ThriftContext.tsx        — global state, CRUD + donate actions, derived stats (React Context)
+  haulInsights.ts          — Commuter Offset / Time Traveler / Liquid Asset / Purchasing Power calculations
   Toast.tsx                — lightweight toast notification provider
 ```
 
@@ -489,6 +491,91 @@ that looks like it works, here's what changed, what didn't, and why.
   flex" showing your 5 best deals reads better than an arbitrary first-5.
 
 
+
+## Feedback round: real store data with addresses
+
+The Sourcing Guide's directory was always explicitly fictional
+("Bethany Vintage Exchange," "St. Johns Swap Room" — placeholder names that
+sounded plausible but weren't real). It's now 8 real, verified secondhand
+stores across Portland and Beaverton, looked up live rather than invented:
+
+- **Real names, addresses, and Google Maps links** for every store —
+  Second Edition Resale Shop (Bethany/Cedar Mill), Beaverton ReStore,
+  Consign Couture (Multnomah Village), visii (NW 23rd), House of Vintage
+  (SE Hawthorne), Village Merchants (SE Division), Broken Dreams (Alberta
+  Arts), and Hound and Hare Vintage (St. Johns) — each address is now
+  tappable and opens the real place in Google Maps.
+- **What's real vs. what's still this app's judgment call**: the name,
+  address, and place ID for each store are real and independently
+  checkable. The category tags, vibe description, and price tier are this
+  app's own read on each store (based on its reviews and listed type),
+  not something the store published — that distinction is called out
+  directly in `lib/sourcingData.ts`.
+- **This is a verified snapshot, not a live feed.** Hours, inventory, and
+  even whether a store is still open can change after today. The UI now
+  says this explicitly instead of the old "starter directory, not a live
+  business listing" framing, since it's no longer a placeholder — it's
+  real data with a "verify before a special trip" caveat, which is a
+  different and more honest thing to say.
+- **The "Thrift Circuit" route order is now based on real coordinates** —
+  a rough west-to-east/north geographic sweep — instead of an arbitrary
+  sequence. Still not live-routed (no traffic, no actual optimization),
+  and the UI says so, but it's no longer just made up.
+- **What "live" would actually require**: genuinely real-time data (fresh
+  hours, current inventory, new stores as they open) needs a live Places
+  API wired into `getRecommendations`, which needs its own API key and
+  has its own usage costs — the same category of tradeoff as the AI
+  features earlier in this project. What's here now is the free version
+  of "real": accurate at compile time, independently verifiable via the
+  Maps links, just not self-updating.
+
+## Feature: four hyper-visual Haul Flex insights
+
+New `components/HaulInsights.tsx` + `lib/haulInsights.ts`, shown as a section
+inside the Haul Flex modal, above the existing shareable receipt preview:
+
+1. **Commuter Offset** — a step-count progress ring against a 10,000-step
+   daily goal. The CO2→steps conversion was corrected from the originally
+   suggested "1 lb CO2 ≈ 1,100 steps" (not grounded in anything physically
+   real) to chain through this app's existing, real CO2-per-mile figure
+   into a real, commonly-cited ~2,000-steps-per-mile average instead.
+2. **Time Traveler Span** — a mini timeline showing the gap between the
+   oldest and newest brand founding years matched in the haul, against a
+   ~45-brand dictionary of real, spot-checked founding years (including
+   correctly using 2006 — not 1937 — for Madewell's modern relaunch, which
+   has no actual continuity with the unrelated 1937 workwear maker of the
+   same name).
+3. **Liquid Asset Score** — a paid-vs-resale comparison bar using a
+   brand/category multiplier heuristic. Labeled explicitly as a rough
+   ballpark, not a real marketplace valuation, in both the UI copy and an
+   info tooltip — no heuristic like this can actually know an item's real
+   resale value without knowing its condition, exact model, and current
+   demand.
+4. **Local Purchasing Power** — an icon array of coffee cups (capped at 24
+   before switching to a "+N" summary) showing total savings translated
+   into lattes/movie tickets, using illustrative round prices, same
+   treatment as the retail-tier baselines elsewhere in this app.
+
+**Important architectural note**: this was built exactly as specified —
+a real React component using Tailwind and SVG (progress ring, timeline,
+comparison bars, icon array) — which is a different rendering approach
+than the existing Haul Flex receipt, which draws everything with canvas
+commands so it can be exported as a single shareable PNG. That means
+these four visualizations currently live on-screen inside the modal
+**but are not part of the downloadable/shareable image** — the section
+header in the UI says "(on-screen only)" so this isn't a silent gap.
+Making them part of the actual shareable PNG would mean re-implementing
+the same four charts as canvas draw calls (very doable — this file
+already hand-draws a droplet, a cloud, and a recycling symbol on canvas —
+just additional work I didn't want to do silently without flagging the
+tradeoff first).
+
+One more honest flag: `Activity` and `Coffee` (the icons for two of the
+four cards) haven't been exercised in a real build of this project the
+way most of the other icons here have — `Clock` and `TrendingUp` are
+extremely standard and low-risk, but if the next Vercel build throws an
+"Attempted import error" on either of the other two, that's the likely
+cause, same failure mode as the `Binoculars` icon a few rounds back.
 
 ## Design & implementation notes
 

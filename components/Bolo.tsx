@@ -37,11 +37,11 @@ export function Bolo() {
   return (
     <section className="bg-white border border-[#A9A290]/30 rounded-lg p-6 shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-[11px] text-[#3F3B30]/45 flex items-center gap-1" style={{ fontFamily: "var(--font-mono)" }}>
-          BOLO Wishlist
+        <h2 className="text-[11px] uppercase tracking-[0.2em] text-[#3F3B30]/45 flex items-center gap-1" style={{ fontFamily: "var(--font-mono)" }}>
+          BOLO wishlist
           <InfoTooltip
             title="What's a BOLO?"
-            body="Be On the Look Out — thrifter slang for a specific item you're actively hunting for."
+            body="Be On the Look Out — thrifter slang for a specific item you're actively hunting for. Basically your hunt list."
             iconSize={12}
           />
         </h2>
@@ -59,7 +59,7 @@ export function Bolo() {
             icon={<Search size={20} />}
             title="No white whales yet"
             description="Add a target item and price so you know exactly when to walk away."
-            actionLabel="Add a wishlist item"
+            actionLabel="Add a hunt item"
             onAction={() => setShowForm(true)}
           />
         </div>
@@ -193,7 +193,7 @@ function BoloFormModal({
         <X size={18} />
       </button>
       <h2 className="text-lg font-semibold mb-5 pr-10" style={{ fontFamily: "var(--font-display)" }}>
-        {initial ? "Edit wishlist item" : "Add to the wishlist"}
+        {initial ? "Edit hunt item" : "Add to the hunt list"}
       </h2>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <label className="flex flex-col gap-1.5">
@@ -217,7 +217,7 @@ function BoloFormModal({
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Optional — size, color, era..." className="modal-input resize-none" />
         </label>
         <button type="submit" disabled={!valid} className="mt-1 min-h-[44px] rounded-full bg-[#333829] text-[#F4F1E8] text-sm font-medium hover:bg-[#333829]/85 transition-colors disabled:opacity-40">
-          {initial ? "Save changes" : "Add to wishlist"}
+          {initial ? "Save changes" : "Add to hunt list"}
         </button>
       </form>
 

@@ -5,6 +5,7 @@ import { X, Download, Receipt, Share2 } from "lucide-react";
 import { useThrift, savingsFor } from "../lib/ThriftContext";
 import { CATEGORY_COLORS, GALLONS_PER_BATHTUB, LBS_CO2_PER_MILE, computeImpact } from "../lib/constants";
 import { BottomSheet } from "./BottomSheet";
+import { HaulInsights } from "./HaulInsights";
 
 const currency = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
@@ -529,6 +530,12 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
         <RangeButton active={range === "all"} onClick={() => setRange("all")}>All time</RangeButton>
       </div>
 
+      <p className="text-[10px] uppercase tracking-wide text-[#3F3B30]/40 mb-2">Extra insights (on-screen only)</p>
+      <div className="mb-5">
+        <HaulInsights items={haulItems} />
+      </div>
+
+      <p className="text-[10px] uppercase tracking-wide text-[#3F3B30]/40 mb-2">Shareable receipt</p>
       <div className="rounded-lg overflow-hidden mx-auto max-h-[60vh] overflow-y-auto" style={{ maxWidth: 230 }}>
         <canvas ref={canvasRef} className="w-full h-auto block" />
       </div>
