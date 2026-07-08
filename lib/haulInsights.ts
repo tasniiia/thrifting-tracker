@@ -200,6 +200,12 @@ function mulberry32(seed: number) {
  * tickets, and 5 Powell's books" — a single combined, additive picture,
  * rather than three separate framings of the same number that need an
  * explicit "or" to avoid looking like they should be summed.
+ *
+ * Each category is guaranteed at least 1 whenever the total can actually
+ * cover one of each (a $29 combined minimum) — only the remainder above
+ * that gets randomly split. A category only shows 0 when the total
+ * genuinely can't cover all three minimums, not as an artifact of an
+ * unlucky random split leaving one category starved.
  */
 export function splitPurchasingPower(totalSaved: number, seed: number) {
   const rand = mulberry32(seed);
@@ -210,10 +216,22 @@ export function splitPurchasingPower(totalSaved: number, seed: number) {
   const movieShare = b - a;
   const bookShare = 1 - b;
 
+  const minTotal = LATTE_PRICE + MOVIE_TICKET_PRICE + USED_BOOK_PRICE;
+  if (totalSaved < minTotal) {
+    // Genuinely not enough to guarantee one of each — a category can
+    // legitimately be 0 here, since the math really doesn't work out.
+    return {
+      lattes: Math.floor((totalSaved * latteShare) / LATTE_PRICE),
+      movieTickets: Math.floor((totalSaved * movieShare) / MOVIE_TICKET_PRICE),
+      books: Math.floor((totalSaved * bookShare) / USED_BOOK_PRICE),
+    };
+  }
+
+  const remainder = totalSaved - minTotal;
   return {
-    lattes: Math.floor((totalSaved * latteShare) / LATTE_PRICE),
-    movieTickets: Math.floor((totalSaved * movieShare) / MOVIE_TICKET_PRICE),
-    books: Math.floor((totalSaved * bookShare) / USED_BOOK_PRICE),
+    lattes: 1 + Math.floor((remainder * latteShare) / LATTE_PRICE),
+    movieTickets: 1 + Math.floor((remainder * movieShare) / MOVIE_TICKET_PRICE),
+    books: 1 + Math.floor((remainder * bookShare) / USED_BOOK_PRICE),
   };
 }
 

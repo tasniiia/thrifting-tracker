@@ -619,6 +619,29 @@ additive, which is what removes the need for the "or" text and the
 and still powers the Haul Flex receipt's coffee-cup count, which only
 ever showed one metric and never had this ambiguity to begin with.
 
+## Feedback round: Purchasing Power randomizes once per page load, not per data change
+
+Previously the split was seeded from `stats.count + totalSaved` — deterministic
+and stable, but only changed when the underlying data actually changed. Switched
+to a middle ground instead of fully random-per-render:
+
+- **`Analytics.tsx`** now generates its seed via `useState(() => Math.random() * 1_000_000)`
+  — a lazy initializer that runs exactly once when the component mounts.
+  Refreshing the page (a full remount) gets a new combination every time;
+  interacting with the rest of the app in that same session does not cause
+  it to reshuffle mid-use.
+- **Why not fully random on every render**: that would mean the numbers
+  visibly changing while you're actively looking at the dashboard (e.g.
+  every time you log a wear or edit an item elsewhere triggers a
+  re-render), which reads as glitchy rather than fun, and would make bugs
+  like the earlier "movie tix showing 0" one much harder to reproduce
+  from a screenshot, since the exact conditions couldn't be recreated.
+- **Scope**: this only changed the Purchasing Power split. The Haul Flex
+  receipt's "girl math" one-liner still uses its original data-derived
+  seed (stable per haul, changes when the haul's items/total change) —
+  happy to give it the same per-page-load treatment if you want that
+  consistency too, just say the word.
+
 ## Design & implementation notes
 
 - **Palette**: cream (`#F4F1E8`) background, sage/olive ink (`#2B2A22`,

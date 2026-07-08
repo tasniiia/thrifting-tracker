@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Droplet, Leaf, Cloud, Sprout, TreeDeciduous, Trees, Gift, ExternalLink, Clock, TrendingUp, Coffee, Ticket, BookOpen, ArrowRight, type LucideIcon } from "lucide-react";
 import { useThrift } from "../lib/ThriftContext";
 import { METHODOLOGY, relatableWater, relatableDriving } from "../lib/constants";
@@ -15,7 +16,11 @@ export function Analytics() {
   const { items, stats } = useThrift();
   const water = relatableWater(stats.bathtubs);
   const driving = relatableDriving(stats.milesDriven);
-  const power = splitPurchasingPower(stats.totalSaved, stats.count + Math.round(stats.totalSaved));
+  // Randomized once per page load (not per re-render) — refreshing gets you
+  // a new combination, but it won't reshuffle mid-session while you're
+  // actively using the app, which would read as glitchy rather than fun.
+  const [powerSeed] = useState(() => Math.floor(Math.random() * 1_000_000));
+  const power = splitPurchasingPower(stats.totalSaved, powerSeed);
   const span = fashionHistorySpan(items);
   const { paid, resale } = totalLiquidAsset(items);
 
