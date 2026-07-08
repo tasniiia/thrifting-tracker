@@ -517,15 +517,35 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
       const overflow = power.lattes - shown;
       const cupR = 20;
       const gap = 14;
-      const totalW = shown * (cupR * 2) + (shown - 1) * gap;
+
+      // measure the overflow badge first so it's included in the
+      // centering math — otherwise the cup row centers on its own width
+      // and the "+N" badge tacked on after it throws the whole row
+      // off-center.
+      ctx.font = "700 24px monospace";
+      const overflowText = overflow > 0 ? `+${overflow}` : "";
+      const overflowPadding = 16;
+      const overflowWidth = overflow > 0 ? ctx.measureText(overflowText).width + overflowPadding : 0;
+
+      const cupsWidth = shown * (cupR * 2) + (shown - 1) * gap;
+      const totalW = cupsWidth + overflowWidth;
       let cx = W / 2 - totalW / 2 + cupR;
+
       for (let i = 0; i < shown; i++) {
         drawCoffeeCup(ctx, cx, y, cupR, "#4F5B3E");
         cx += cupR * 2 + gap;
       }
+
+      if (overflow > 0) {
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#3F4A38";
+        ctx.fillText(overflowText, cx - gap + overflowPadding - 6, y + 8);
+      }
+
+      ctx.textAlign = "center";
       ctx.font = "700 22px monospace";
       ctx.fillStyle = "#3F4A38";
-      const label = `${power.lattes} latte${power.lattes === 1 ? "" : "s"} saved${overflow > 0 ? ` (+${overflow})` : ""}`;
+      const label = `${power.lattes} latte${power.lattes === 1 ? "" : "s"} saved`;
       ctx.fillText(label, W / 2, y + 55);
       y += 90;
     } else {
