@@ -653,6 +653,31 @@ since the ask was specifically scoped to mobile. This only required
 wrapping each section in a small `<div>` carrying the responsive order
 class — no changes to the components themselves.
 
+## Feedback round: BOLO "Found it!" button redesigned to match the app
+
+The old button was a small 44px icon-only circle using a gold gradient
+(`#E8B54D` → `#C98A2C`) — a color that appeared nowhere else in the app,
+which is almost certainly why it read as mismatched. Sat among other
+small icon buttons (edit/delete), it also didn't clearly signal "this is
+the important one." Explored three on-palette alternatives first (shown
+as an interactive mockup) before building the chosen direction:
+
+- **Full-width, labeled, sage-colored button** (`#333829`, the same fill
+  used for every other primary action in the app — "Log an item," "Add to
+  hunt list") reading "Found it!" with a checkmark icon, instead of a bare
+  icon in a row of other icons. It now sits on its own line below the
+  marketplace links, so it's unambiguously the card's main action.
+- **A real confetti burst on tap** — a new `FoundItButton` component
+  (`components/Bolo.tsx`) with its own local particle state (10 small
+  dots in cream/sage/clay tones, each animating outward at a randomized
+  angle/distance via a CSS keyframe driven by per-particle `--dx`/`--dy`
+  custom properties) plus a quick press-scale on the button itself. Each
+  card's burst is fully independent — it's component state, not a global
+  DOM side-effect, so multiple cards never interfere with each other.
+- Icon swapped from `Sparkles` to `CheckCircle2`, which was already
+  verified working elsewhere in this exact app (`lib/Toast.tsx`), so this
+  introduces zero new icon-import risk.
+
 ## Design & implementation notes
 
 - **Palette**: cream (`#F4F1E8`) background, sage/olive ink (`#2B2A22`,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Pencil, X, Sparkles, Search, ExternalLink } from "lucide-react";
+import { Plus, Trash2, Pencil, X, CheckCircle2, Search, ExternalLink } from "lucide-react";
 import { useThrift } from "../lib/ThriftContext";
 import { CATEGORIES } from "../lib/constants";
 import { marketplacesForCategory } from "../lib/marketplaceLinks";
@@ -78,14 +78,6 @@ export function Bolo() {
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() => handleFound(b)}
-                    aria-label="Found it!"
-                    title="Found it!"
-                    className="relative w-11 h-11 flex items-center justify-center rounded-full bg-gradient-to-br from-[#E8B54D] to-[#C98A2C] text-white shadow-sm hover:shadow-md hover:scale-110 active:scale-95 transition-all duration-150"
-                  >
-                    <Sparkles size={16} />
-                  </button>
                   <ActionMenu
                     items={[
                       { label: "Edit", icon: <Pencil size={14} />, onClick: () => setEditing(b) },
@@ -111,6 +103,10 @@ export function Bolo() {
                     {m.name} <ExternalLink size={9} />
                   </a>
                 ))}
+              </div>
+
+              <div className="mt-3">
+                <FoundItButton onClick={() => handleFound(b)} />
               </div>
             </li>
           ))}
@@ -153,6 +149,87 @@ export function Bolo() {
         />
       )}
     </section>
+  );
+}
+
+/**
+ * The BOLO "Found it!" action — full-width, sage (matching the app's
+ * primary-button language elsewhere, e.g. "Log an item") so it reads
+ * unmistakably as a real button rather than a small icon among other
+ * icons. Fires a short confetti burst on tap for a little reward moment;
+ * particles are local component state per card, not a global DOM
+ * side-effect, so multiple cards never interfere with each other.
+ */
+function FoundItButton({ onClick }: { onClick: () => void }) {
+  const [particles, setParticles] = useState<
+    { id: number; dx: number; dy: number; size: number; color: string }[]
+  >([]);
+  const [pressed, setPressed] = useState(false);
+
+  function handleClick() {
+    const colors = ["#F4F1E8", "#D9E0CD", "#B5714B"];
+    const burst = Array.from({ length: 10 }).map((_, i) => {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 26 + Math.random() * 26;
+      return {
+        id: Date.now() + i,
+        dx: Math.cos(angle) * dist,
+        dy: Math.sin(angle) * dist,
+        size: 4 + Math.random() * 4,
+        color: colors[i % colors.length],
+      };
+    });
+    setParticles(burst);
+    setPressed(true);
+    setTimeout(() => setParticles([]), 650);
+    setTimeout(() => setPressed(false), 160);
+    onClick();
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={handleClick}
+        className="w-full flex items-center justify-center gap-2 rounded-full bg-[#333829] text-[#F4F1E8] py-2.5 text-sm font-semibold hover:bg-[#333829]/85 transition-colors"
+        style={{ transform: pressed ? "scale(0.96)" : "scale(1)", transition: "transform 0.15s ease-out" }}
+      >
+        <CheckCircle2 size={16} /> Found it!
+      </button>
+      <div className="absolute inset-0 pointer-events-none overflow-visible">
+        {particles.map((p) => (
+          <span
+            key={p.id}
+            className="absolute left-1/2 top-1/2 rounded-full bolo-confetti"
+            style={
+              {
+                width: p.size,
+                height: p.size,
+                marginLeft: -p.size / 2,
+                marginTop: -p.size / 2,
+                backgroundColor: p.color,
+                "--dx": `${p.dx}px`,
+                "--dy": `${p.dy}px`,
+              } as React.CSSProperties
+            }
+          />
+        ))}
+      </div>
+      <style jsx global>{`
+        @keyframes bolo-confetti-burst {
+          from {
+            transform: translate(0, 0);
+            opacity: 1;
+          }
+          to {
+            transform: translate(var(--dx), var(--dy));
+            opacity: 0;
+          }
+        }
+        .bolo-confetti {
+          animation: bolo-confetti-burst 0.6s ease-out forwards;
+        }
+      `}</style>
+    </div>
   );
 }
 
