@@ -179,6 +179,44 @@ export function purchasingPower(totalSaved: number) {
   };
 }
 
+/** Small seeded PRNG (mulberry32) — same technique already used for the
+ *  Haul Flex receipt's barcode, so the split below is stable for the same
+ *  underlying data instead of jittering on every re-render. */
+function mulberry32(seed: number) {
+  let a = seed;
+  return function () {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Splits the total saved across all three comparisons at once (randomized
+ * but seed-stable proportions) instead of showing each as an independent
+ * "or" alternative for the full amount. E.g. "roughly 30 lattes, 12 movie
+ * tickets, and 5 Powell's books" — a single combined, additive picture,
+ * rather than three separate framings of the same number that need an
+ * explicit "or" to avoid looking like they should be summed.
+ */
+export function splitPurchasingPower(totalSaved: number, seed: number) {
+  const rand = mulberry32(seed);
+  let a = rand();
+  let b = rand();
+  if (a > b) [a, b] = [b, a];
+  const latteShare = a;
+  const movieShare = b - a;
+  const bookShare = 1 - b;
+
+  return {
+    lattes: Math.floor((totalSaved * latteShare) / LATTE_PRICE),
+    movieTickets: Math.floor((totalSaved * movieShare) / MOVIE_TICKET_PRICE),
+    books: Math.floor((totalSaved * bookShare) / USED_BOOK_PRICE),
+  };
+}
+
 /* ==================================================================== */
 /*  4. "Girl math" one-liner for the Haul Flex receipt — a deliberately  */
 /*  silly, self-aware joke about the very real savings number, not a    */

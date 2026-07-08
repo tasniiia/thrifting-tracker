@@ -601,6 +601,24 @@ section inside the Haul Flex modal, so they got reorganized:
   exercised in an actual build of this project, same caveat as `Coffee`
   from the last two rounds. `ArrowRight` is extremely standard and safe.
 
+## Feedback round: Purchasing Power redesigned as one combined split, not three "or" alternatives
+
+The previous "or" dividers fixed the ambiguity but were a patch on a
+design that was fighting itself — three independent framings of the
+*same* full amount, needing extra UI just to explain they shouldn't be
+added up. Redesigned instead: `splitPurchasingPower` in
+`lib/haulInsights.ts` now divides the total saved across all three
+comparisons at once, using a seeded random split (same `mulberry32`
+technique already used for the Haul Flex receipt's barcode, so the same
+underlying data always produces the same split instead of jittering on
+every re-render). The result reads as one cohesive picture — "roughly 11
+lattes, 4 movie tickets, and 15 Powell's books" — that's genuinely
+additive, which is what removes the need for the "or" text and the
+"these are alternatives, not a total" disclaimer entirely. The original
+`purchasingPower` (full amount ÷ each price independently) is untouched
+and still powers the Haul Flex receipt's coffee-cup count, which only
+ever showed one metric and never had this ambiguity to begin with.
+
 ## Design & implementation notes
 
 - **Palette**: cream (`#F4F1E8`) background, sage/olive ink (`#2B2A22`,

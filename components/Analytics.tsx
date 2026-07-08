@@ -3,14 +3,7 @@
 import { Droplet, Leaf, Cloud, Sprout, TreeDeciduous, Trees, Gift, ExternalLink, Clock, TrendingUp, Coffee, Ticket, BookOpen, ArrowRight, type LucideIcon } from "lucide-react";
 import { useThrift } from "../lib/ThriftContext";
 import { METHODOLOGY, relatableWater, relatableDriving } from "../lib/constants";
-import {
-  fashionHistorySpan,
-  totalLiquidAsset,
-  purchasingPower,
-  LATTE_PRICE,
-  MOVIE_TICKET_PRICE,
-  USED_BOOK_PRICE,
-} from "../lib/haulInsights";
+import { fashionHistorySpan, totalLiquidAsset, splitPurchasingPower, LATTE_PRICE, MOVIE_TICKET_PRICE, USED_BOOK_PRICE } from "../lib/haulInsights";
 import { InfoTooltip } from "./InfoTooltip";
 
 const currency = (n: number) =>
@@ -22,7 +15,7 @@ export function Analytics() {
   const { items, stats } = useThrift();
   const water = relatableWater(stats.bathtubs);
   const driving = relatableDriving(stats.milesDriven);
-  const power = purchasingPower(stats.totalSaved);
+  const power = splitPurchasingPower(stats.totalSaved, stats.count + Math.round(stats.totalSaved));
   const span = fashionHistorySpan(items);
   const { paid, resale } = totalLiquidAsset(items);
 
@@ -54,28 +47,20 @@ export function Analytics() {
             <Stat label="Avg. saved / item" value={stats.count ? currency(stats.totalSaved / stats.count) : "—"} />
           </div>
 
-          {power.lattes > 0 && (
+          {power.lattes + power.movieTickets + power.books > 0 && (
             <div className="mt-4 pt-4 border-t border-dashed border-[#A9A290]/40">
               <div className="flex items-center gap-1.5 mb-3">
-                <p className="text-[12px] text-[#3F3B30]/60">That's about any ONE of these</p>
+                <p className="text-[12px] text-[#3F3B30]/60">Roughly equivalent to</p>
                 <InfoTooltip
-                  title="These are alternatives, not a total"
-                  body={`Three different ways to picture the same savings — not added together. Assumes a $${LATTE_PRICE} latte, a $${MOVIE_TICKET_PRICE} movie ticket, and an $${USED_BOOK_PRICE} used book at Powell's — reasonable round numbers, not cited local averages (prices vary a lot shop to shop).`}
+                  title="Illustrative, not researched pricing"
+                  body={`Your total savings split into a random (but stable) mix across three everyday prices — a $${LATTE_PRICE} latte, a $${MOVIE_TICKET_PRICE} movie ticket, and an $${USED_BOOK_PRICE} used book at Powell's. Reasonable round numbers, not cited local averages.`}
                   iconSize={11}
                 />
               </div>
-              <div className="flex items-center gap-1.5">
-                <div className="flex-1 min-w-0">
-                  <PowerColumn icon={Coffee} count={power.lattes} label="lattes" color="#4F5B3E" />
-                </div>
-                <span className="text-[10px] italic text-[#3F3B30]/35 shrink-0">or</span>
-                <div className="flex-1 min-w-0">
-                  <PowerColumn icon={Ticket} count={power.movieTickets} label="movie tix" color="#B5714B" />
-                </div>
-                <span className="text-[10px] italic text-[#3F3B30]/35 shrink-0">or</span>
-                <div className="flex-1 min-w-0">
-                  <PowerColumn icon={BookOpen} count={power.books} label="Powell's books" color="#3E6E7A" />
-                </div>
+              <div className="grid grid-cols-3 gap-2">
+                <PowerColumn icon={Coffee} count={power.lattes} label="lattes" color="#4F5B3E" />
+                <PowerColumn icon={Ticket} count={power.movieTickets} label="movie tix" color="#B5714B" />
+                <PowerColumn icon={BookOpen} count={power.books} label="Powell's books" color="#3E6E7A" />
               </div>
             </div>
           )}
