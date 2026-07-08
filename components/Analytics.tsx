@@ -1,6 +1,6 @@
 "use client";
 
-import { Droplet, Leaf, Cloud, Sprout, TreeDeciduous, Trees, Gift, ExternalLink, Clock, TrendingUp, Coffee, Ticket, BookOpen, ArrowRight } from "lucide-react";
+import { Droplet, Leaf, Cloud, Sprout, TreeDeciduous, Trees, Gift, ExternalLink, Clock, TrendingUp, Coffee, Ticket, BookOpen, ArrowRight, type LucideIcon } from "lucide-react";
 import { useThrift } from "../lib/ThriftContext";
 import { METHODOLOGY, relatableWater, relatableDriving } from "../lib/constants";
 import {
@@ -402,7 +402,7 @@ function PowerColumn({
   label,
   color,
 }: {
-  icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
+  icon: LucideIcon;
   count: number;
   label: string;
   color: string;
