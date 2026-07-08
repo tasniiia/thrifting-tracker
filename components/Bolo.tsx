@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Pencil, X, CheckCircle2, Search, ExternalLink, Tag } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Search, ExternalLink, Tag } from "lucide-react";
 import { useThrift } from "../lib/ThriftContext";
 import { CATEGORIES } from "../lib/constants";
 import { marketplacesForCategory } from "../lib/marketplaceLinks";
@@ -197,7 +197,7 @@ function FoundItButton({ onClick }: { onClick: () => void }) {
         className="w-full flex items-center justify-center gap-2 rounded-full bg-[#4F5B3E] text-[#F4F1E8] py-2.5 text-sm font-semibold hover:bg-[#4F5B3E]/85 transition-colors"
         style={{ transform: pressed ? "scale(0.96)" : "scale(1)", transition: "transform 0.15s ease-out" }}
       >
-        <CheckCircle2 size={16} /> Found it! <Tag size={14} />
+        <Tag size={16} /> Found it!
       </button>
       <div className="absolute inset-0 pointer-events-none overflow-visible">
         {particles.map((p) => (
