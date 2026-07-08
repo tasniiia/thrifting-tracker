@@ -115,17 +115,27 @@ function Dashboard() {
               </div>
 
               {/* side column on desktop, stacks below on mobile — the
-                 "BOLO/Explore" surface: sourcing, compatibility, hunt list */}
+                 "BOLO/Explore" surface: sourcing, compatibility, hunt list.
+                 Mobile shows BOLO first (order-1), then Sourcing Guide,
+                 then Compatibility Check; desktop keeps the original
+                 Sourcing Guide → Compatibility → BOLO arrangement via the
+                 lg: order overrides below. */}
               <div className="flex flex-col gap-6 order-2">
-                <ErrorBoundary label="Sourcing guide">
-                  <SourcingGuide />
-                </ErrorBoundary>
-                <ErrorBoundary label="Compatibility check">
-                  <CompatibilityCheck />
-                </ErrorBoundary>
-                <ErrorBoundary label="BOLO wishlist">
-                  <Bolo />
-                </ErrorBoundary>
+                <div className="order-2 lg:order-1">
+                  <ErrorBoundary label="Sourcing guide">
+                    <SourcingGuide />
+                  </ErrorBoundary>
+                </div>
+                <div className="order-3 lg:order-2">
+                  <ErrorBoundary label="Compatibility check">
+                    <CompatibilityCheck />
+                  </ErrorBoundary>
+                </div>
+                <div className="order-1 lg:order-3">
+                  <ErrorBoundary label="BOLO wishlist">
+                    <Bolo />
+                  </ErrorBoundary>
+                </div>
               </div>
             </div>
           </>

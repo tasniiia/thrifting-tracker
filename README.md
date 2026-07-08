@@ -642,6 +642,17 @@ to a middle ground instead of fully random-per-render:
   happy to give it the same per-page-load treatment if you want that
   consistency too, just say the word.
 
+## Feedback round: BOLO moved above Sourcing Guide on mobile only
+
+`app/page.tsx`'s side column (Sourcing Guide, Compatibility Check, BOLO)
+now shows BOLO first on mobile, then Sourcing Guide, then Compatibility
+Check — using responsive Tailwind `order` utilities (`order-1 lg:order-3`
+on BOLO, etc.) rather than actually reordering the JSX. Desktop keeps the
+original Sourcing Guide → Compatibility → BOLO arrangement unchanged,
+since the ask was specifically scoped to mobile. This only required
+wrapping each section in a small `<div>` carrying the responsive order
+class — no changes to the components themselves.
+
 ## Design & implementation notes
 
 - **Palette**: cream (`#F4F1E8`) background, sage/olive ink (`#2B2A22`,
