@@ -570,6 +570,37 @@ section inside the Haul Flex modal, so they got reorganized:
   still hasn't been exercised in an actual build of this project, same
   caveat as last round.
 
+## Feedback round: girl math on the receipt, clearer Time Traveler, 3-way Purchasing Power
+
+- **Haul Flex receipt**: Time Traveler Span is gone from the public
+  image, replaced by a seeded "girl math" one-liner (`girlMathLine` in
+  `lib/haulInsights.ts` — six variants, deterministically picked per haul
+  so the same data always shows the same line instead of jittering on
+  every render) plus a genuinely hand-drawn coffee cup row (`drawCoffeeCup`
+  — body, handle, steam, matching the existing droplet/cloud/recycle icon
+  style rather than an icon font) visualizing the latte count. Liquid
+  Asset Score still deliberately stays off the public image for the same
+  reason as before — its heuristic caveat lives in a tooltip that a
+  screenshot doesn't carry with it.
+- **Time Traveler widget redesigned for clarity** in the main dashboard's
+  Closet Character card. It was two small numbers in opposite corners of
+  a plain line, which needed careful reading to parse. Now it's two
+  labeled brand chips (brand name + full year, not abbreviated) connected
+  by a directional arrow — oldest → newest is immediately legible — plus
+  a new caption ("Based on N recognized brands in your closet") that's
+  honest about how thin the match might be, since most items still won't
+  match the ~45-brand dictionary.
+- **Purchasing Power is now a real 3-way comparison**, not a single icon
+  list with two lines of trailing text. A third comparison was added —
+  a $8 used book at Powell's — chosen deliberately over a generic third
+  option because it's a real, iconic Portland secondhand institution and
+  fits this app's world better than a random national chain would. All
+  three (lattes, movie tickets, Powell's books) now render as their own
+  small icon-array-plus-count column, side by side.
+- **Two more unverified icons**: `Ticket` and `BookOpen` haven't been
+  exercised in an actual build of this project, same caveat as `Coffee`
+  from the last two rounds. `ArrowRight` is extremely standard and safe.
+
 ## Design & implementation notes
 
 - **Palette**: cream (`#F4F1E8`) background, sage/olive ink (`#2B2A22`,

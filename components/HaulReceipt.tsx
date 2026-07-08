@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Download, Receipt, Share2 } from "lucide-react";
 import { useThrift, savingsFor } from "../lib/ThriftContext";
 import { CATEGORY_COLORS, GALLONS_PER_BATHTUB, LBS_CO2_PER_MILE, computeImpact } from "../lib/constants";
-import { fashionHistorySpan, purchasingPower } from "../lib/haulInsights";
+import { purchasingPower, girlMathLine } from "../lib/haulInsights";
 import { BottomSheet } from "./BottomSheet";
 
 const currency = (n: number) =>
@@ -117,6 +117,42 @@ function drawRecycle(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: n
 
     ctx.restore();
   }
+  ctx.restore();
+}
+
+/** A simple coffee cup — body, handle, and two steam wisps — used for the
+ *  "girl math" savings visualization. Matches the hand-drawn style of the
+ *  droplet/cloud/recycle icons above rather than relying on an icon font. */
+function drawCoffeeCup(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.fillStyle = color;
+  ctx.strokeStyle = color;
+
+  // cup body — slightly narrower at the base
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.7, -r * 0.5);
+  ctx.lineTo(r * 0.7, -r * 0.5);
+  ctx.lineTo(r * 0.5, r * 0.85);
+  ctx.quadraticCurveTo(0, r * 1.0, -r * 0.5, r * 0.85);
+  ctx.closePath();
+  ctx.fill();
+
+  // handle
+  ctx.lineWidth = Math.max(2, r * 0.16);
+  ctx.beginPath();
+  ctx.arc(r * 0.9, -r * 0.05, r * 0.32, -Math.PI * 0.5, Math.PI * 0.5);
+  ctx.stroke();
+
+  // steam
+  ctx.lineWidth = Math.max(1.5, r * 0.09);
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.22, -r * 0.65);
+  ctx.quadraticCurveTo(-r * 0.05, -r * 0.9, -r * 0.22, -r * 1.15);
+  ctx.moveTo(r * 0.18, -r * 0.65);
+  ctx.quadraticCurveTo(r * 0.35, -r * 0.9, r * 0.18, -r * 1.15);
+  ctx.stroke();
+
   ctx.restore();
 }
 
@@ -453,50 +489,51 @@ function HaulReceiptModal({ onClose }: { onClose: () => void }) {
 
     y += panelH;
 
-    // fun facts strip — the two most shareable "closet character" insights.
-    // Liquid Asset Score is deliberately left out of this public image: its
-    // heuristic caveat lives in an in-app tooltip that wouldn't travel with
-    // a shared screenshot, and a bare "$340 resale value" number with no
-    // caveat attached would read as a harder claim than it actually is.
-    const span = fashionHistorySpan(haulItems);
+    // girl math one-liner + coffee cup visualization — the one closet-fact
+    // that made the cut for the public receipt. Time Traveler Span moved to
+    // the main dashboard instead (it needs more room to read clearly than
+    // this receipt has left), and Liquid Asset Score stays in-app only:
+    // its "rough ballpark, not a valuation" caveat lives in a tooltip that
+    // wouldn't travel with a shared screenshot, and a bare dollar figure
+    // with no caveat attached would read as a harder claim than it is.
     const power = purchasingPower(totals.totalSaved);
-    if (span || power.lattes > 0) {
-      y += 55;
-      const half = (W - 140) / 2;
-      ctx.textAlign = "center";
+    const seed = Math.round(totals.totalSaved) + haulItems.length;
+    const line = girlMathLine(
+      { totalSavedFormatted: currency(totals.totalSaved), percentOff: totals.percentOff, itemCount: haulItems.length },
+      seed
+    );
 
-      if (span) {
-        const cx = power.lattes > 0 ? 70 + half / 2 : W / 2;
-        ctx.font = "700 48px monospace";
-        ctx.fillStyle = "#2B2A22";
-        ctx.fillText(`${span.spanYears}`, cx, y);
-        ctx.font = "400 20px monospace";
-        ctx.fillStyle = "#6B6656";
-        ctx.fillText("yrs of fashion history", cx, y + 32);
+    y += 60;
+    ctx.textAlign = "center";
+    ctx.font = "italic 700 27px monospace";
+    ctx.fillStyle = "#B5714B";
+    const lineParts = wrapText(ctx, line, W - 160);
+    lineParts.forEach((part, i) => ctx.fillText(part, W / 2, y + i * 36));
+    y += (lineParts.length - 1) * 36;
+
+    if (power.lattes > 0) {
+      y += 55;
+      const shown = Math.min(power.lattes, 10);
+      const overflow = power.lattes - shown;
+      const cupR = 20;
+      const gap = 14;
+      const totalW = shown * (cupR * 2) + (shown - 1) * gap;
+      let cx = W / 2 - totalW / 2 + cupR;
+      for (let i = 0; i < shown; i++) {
+        drawCoffeeCup(ctx, cx, y, cupR, "#4F5B3E");
+        cx += cupR * 2 + gap;
       }
-      if (power.lattes > 0) {
-        const cx = span ? 70 + half + half / 2 : W / 2;
-        ctx.font = "700 48px monospace";
-        ctx.fillStyle = "#2B2A22";
-        ctx.fillText(`${power.lattes}`, cx, y);
-        ctx.font = "400 20px monospace";
-        ctx.fillStyle = "#6B6656";
-        ctx.fillText(power.lattes === 1 ? "latte saved" : "lattes saved", cx, y + 32);
-      }
-      if (span && power.lattes > 0) {
-        ctx.strokeStyle = "#D8D2C0";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(W / 2, y - 42);
-        ctx.lineTo(W / 2, y + 14);
-        ctx.stroke();
-      }
-      ctx.textAlign = "left";
-      y += 60;
+      ctx.font = "700 22px monospace";
+      ctx.fillStyle = "#3F4A38";
+      const label = `${power.lattes} latte${power.lattes === 1 ? "" : "s"} saved${overflow > 0 ? ` (+${overflow})` : ""}`;
+      ctx.fillText(label, W / 2, y + 55);
+      y += 90;
+    } else {
+      y += 30;
     }
 
     // barcode
-    const barcodeY = y + 70;
+    const barcodeY = y + 40;
     let bx = 70;
     const rand = mulberry32(haulItems.length + 7);
     while (bx < W - 70) {

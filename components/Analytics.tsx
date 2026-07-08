@@ -1,9 +1,16 @@
 "use client";
 
-import { Droplet, Leaf, Cloud, Sprout, TreeDeciduous, Trees, Gift, ExternalLink, Clock, TrendingUp, Coffee } from "lucide-react";
+import { Droplet, Leaf, Cloud, Sprout, TreeDeciduous, Trees, Gift, ExternalLink, Clock, TrendingUp, Coffee, Ticket, BookOpen, ArrowRight } from "lucide-react";
 import { useThrift } from "../lib/ThriftContext";
 import { METHODOLOGY, relatableWater, relatableDriving } from "../lib/constants";
-import { fashionHistorySpan, totalLiquidAsset, purchasingPower, LATTE_PRICE, MOVIE_TICKET_PRICE, MAX_ICONS_SHOWN } from "../lib/haulInsights";
+import {
+  fashionHistorySpan,
+  totalLiquidAsset,
+  purchasingPower,
+  LATTE_PRICE,
+  MOVIE_TICKET_PRICE,
+  USED_BOOK_PRICE,
+} from "../lib/haulInsights";
 import { InfoTooltip } from "./InfoTooltip";
 
 const currency = (n: number) =>
@@ -49,22 +56,19 @@ export function Analytics() {
 
           {power.lattes > 0 && (
             <div className="mt-4 pt-4 border-t border-dashed border-[#A9A290]/40">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Coffee size={13} className="text-[#4F5B3E]" />
+              <div className="flex items-center gap-1.5 mb-3">
                 <p className="text-[12px] text-[#3F3B30]/60">That's about</p>
                 <InfoTooltip
                   title="Illustrative, not researched pricing"
-                  body={`Assumes a $${LATTE_PRICE} latte and a $${MOVIE_TICKET_PRICE} movie ticket — reasonable round numbers, not a cited local average (prices vary a lot shop to shop).`}
+                  body={`Assumes a $${LATTE_PRICE} latte, a $${MOVIE_TICKET_PRICE} movie ticket, and an $${USED_BOOK_PRICE} used book at Powell's — reasonable round numbers, not cited local averages (prices vary a lot shop to shop).`}
                   iconSize={11}
                 />
               </div>
-              <IconArray count={power.lattes} />
-              <p className="text-[11px] text-[#3F3B30]/45 mt-1.5">
-                {power.lattes} latte{power.lattes === 1 ? "" : "s"}
-                {power.movieTickets > 0 && (
-                  <> · or {power.movieTickets} movie ticket{power.movieTickets === 1 ? "" : "s"}</>
-                )}
-              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <PowerColumn icon={Coffee} count={power.lattes} label="lattes" color="#4F5B3E" />
+                <PowerColumn icon={Ticket} count={power.movieTickets} label="movie tix" color="#B5714B" />
+                <PowerColumn icon={BookOpen} count={power.books} label="Powell's books" color="#3E6E7A" />
+              </div>
             </div>
           )}
         </div>
@@ -179,17 +183,16 @@ export function Analytics() {
                 <div>
                   <p className="text-2xl font-bold leading-none" style={{ fontFamily: "var(--font-display)" }}>
                     {span.spanYears}{" "}
-                    <span className="text-sm font-normal text-[#3F3B30]/60">years of fashion history</span>
+                    <span className="text-sm font-normal text-[#3F3B30]/60">years apart</span>
                   </p>
-                  <Timeline />
-                  <div className="flex justify-between text-[11px] text-[#3F3B30]/50 mt-1">
-                    <span className="truncate max-w-[45%]">
-                      {span.oldestBrand} &apos;{String(span.oldestYear).slice(-2)}
-                    </span>
-                    <span className="truncate max-w-[45%] text-right">
-                      {span.newestBrand} &apos;{String(span.newestYear).slice(-2)}
-                    </span>
+                  <div className="flex items-center gap-2 mt-3">
+                    <BrandChip brand={span.oldestBrand} year={span.oldestYear} />
+                    <ArrowRight size={14} className="text-[#A9A290] shrink-0" />
+                    <BrandChip brand={span.newestBrand} year={span.newestYear} />
                   </div>
+                  <p className="text-[10.5px] text-[#3F3B30]/40 mt-2">
+                    Based on {span.matchedCount} recognized brand{span.matchedCount === 1 ? "" : "s"} in your closet
+                  </p>
                 </div>
               ) : (
                 <p className="text-[12px] text-[#3F3B30]/45 leading-snug">
@@ -361,12 +364,15 @@ function ImpactRow({
 }
 
 /** Fashion-history mini timeline — two endpoint dots on a line. */
-function Timeline() {
+/** A labeled brand + founding-year chip, used in pairs (oldest → newest)
+ *  in the Time Traveler widget. */
+function BrandChip({ brand, year }: { brand: string; year: number }) {
   return (
-    <div className="relative h-2 mt-2 mb-1">
-      <div className="absolute inset-y-0 left-0 right-0 my-auto h-[2px] bg-[#A9A290]/40 rounded-full" />
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#B5714B]" />
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#4F5B3E]" />
+    <div className="flex-1 min-w-0 bg-[#F4F1E8] rounded-lg px-2.5 py-2 border border-[#A9A290]/25">
+      <p className="text-[12px] font-medium truncate">{brand}</p>
+      <p className="text-[10px] text-[#3F3B30]/50" style={{ fontFamily: "var(--font-mono)" }}>
+        {year}
+      </p>
     </div>
   );
 }
@@ -388,15 +394,33 @@ function ComparisonBar({ label, value, max, color }: { label: string; value: num
 }
 
 /** Icon array (coffee cups), capped with a "+N" summary beyond that. */
-function IconArray({ count }: { count: number }) {
-  const shown = Math.min(count, MAX_ICONS_SHOWN);
+/** One column of the "That's about" 3-way comparison grid: a small capped
+ *  icon array, the count, and a label. */
+function PowerColumn({
+  icon: Icon,
+  count,
+  label,
+  color,
+}: {
+  icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
+  count: number;
+  label: string;
+  color: string;
+}) {
+  const shown = Math.min(count, 8);
   const overflow = count - shown;
   return (
-    <div className="flex flex-wrap gap-1">
-      {Array.from({ length: shown }).map((_, i) => (
-        <Coffee key={i} size={14} className="text-[#4F5B3E]" />
-      ))}
-      {overflow > 0 && <span className="text-[11px] text-[#3F3B30]/50 self-center ml-0.5">+{overflow}</span>}
+    <div className="text-center">
+      <div className="flex flex-wrap justify-center gap-0.5 mb-1.5 min-h-[16px]">
+        {Array.from({ length: shown }).map((_, i) => (
+          <Icon key={i} size={11} className="shrink-0" style={{ color }} />
+        ))}
+        {overflow > 0 && <span className="text-[9px] text-[#3F3B30]/45 self-center">+{overflow}</span>}
+      </div>
+      <p className="text-lg font-bold leading-none" style={{ fontFamily: "var(--font-mono)", color }}>
+        {count}
+      </p>
+      <p className="text-[9.5px] text-[#3F3B30]/50 mt-0.5 leading-tight">{label}</p>
     </div>
   );
 }

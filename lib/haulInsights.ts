@@ -158,21 +158,47 @@ export function totalLiquidAsset(items: ThriftItem[]) {
 
 /* ==================================================================== */
 /*  3. Local Purchasing Power — illustrative Portland-flavored price     */
-/*  points, not researched/cited "average" prices (coffee and movie      */
-/*  ticket prices vary too much shop-to-shop for a single defensible     */
-/*  citation) — same treatment as the retail-tier baselines elsewhere    */
-/*  in this app: a reasonable round number, clearly labeled as ballpark.  */
+/*  points, not researched/cited "average" prices (coffee, movie ticket, */
+/*  and used-book prices all vary too much shop-to-shop for a single     */
+/*  defensible citation) — same treatment as the retail-tier baselines   */
+/*  elsewhere in this app: a reasonable round number, clearly labeled as */
+/*  ballpark. Powell's Books was picked as the third comparison over     */
+/*  something generic specifically because it's a real, iconic Portland */
+/*  secondhand institution — it fits this app's world better than a      */
+/*  random national chain would.                                        */
 /* ==================================================================== */
 export const LATTE_PRICE = 6;
 export const MOVIE_TICKET_PRICE = 15;
-/** Icon array is capped here — beyond this many cups/tickets it becomes
- *  visual noise rather than a tangible count, and switches to a "+N" style
- *  summary instead. */
-export const MAX_ICONS_SHOWN = 24;
+export const USED_BOOK_PRICE = 8;
 
 export function purchasingPower(totalSaved: number) {
   return {
     lattes: Math.floor(totalSaved / LATTE_PRICE),
     movieTickets: Math.floor(totalSaved / MOVIE_TICKET_PRICE),
+    books: Math.floor(totalSaved / USED_BOOK_PRICE),
   };
+}
+
+/* ==================================================================== */
+/*  4. "Girl math" one-liner for the Haul Flex receipt — a deliberately  */
+/*  silly, self-aware joke about the very real savings number, not a    */
+/*  serious claim. Picked deterministically from a seed (so the same     */
+/*  haul shows the same line on every re-render instead of jittering)    */
+/*  rather than truly randomly.                                          */
+/* ==================================================================== */
+export function girlMathLine(
+  params: { totalSavedFormatted: string; percentOff: number; itemCount: number },
+  seed: number
+): string {
+  const { totalSavedFormatted, percentOff, itemCount } = params;
+  const templates = [
+    `girl math: saving ${totalSavedFormatted} basically means you got paid to shop`,
+    `girl math: ${Math.round(percentOff)}% off is basically a bonus check`,
+    "girl math: thrifted purchases don't count against the budget",
+    `girl math: ${itemCount} new-to-you pieces and still under budget? basically free`,
+    "girl math: secondhand savings are just free money, that's the math",
+    `girl math: technically, saving ${totalSavedFormatted} is the same as earning it`,
+  ];
+  const idx = ((seed % templates.length) + templates.length) % templates.length;
+  return templates[idx];
 }
